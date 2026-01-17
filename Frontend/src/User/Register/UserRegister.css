@@ -1,0 +1,55 @@
+*{
+    margin:0px;
+    padding:0px;
+}
+html{
+    height:100%;
+    overflow: hidden;
+}
+body{
+    background:linear-gradient(
+        rgb(0,0,0,0.55),
+        rgb(0,0,0,0.55)
+    ),
+    url("/src/assets/IndianFood.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height:100%;
+}
+.UserReg{
+    border:2px solid black;
+    height:400px;
+    width:400px;
+    padding:40px;
+    position: absolute;
+    top:20%;
+    left:40%;
+    background: white;
+    box-sizing: border-box;
+}
+.inputBox{
+    margin-bottom: 30px;
+    height:30px;
+    box-sizing: border-box;
+    padding:6px;
+    position:relative;
+}
+.inputBox input{
+    padding:5px 5px 5px 30px;
+}
+.inputBox i{
+    position:absolute;
+    left:10px;
+    bottom:2px;
+}
+.UserReg h2{
+    margin-bottom: 30px;
+    margin-left:80px;
+}
+.signIn{
+    margin:10px 100px;
+    width:130px;
+    height:30px;
+    cursor: pointer;
+}
