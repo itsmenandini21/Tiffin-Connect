@@ -1,5 +1,5 @@
 import "./UserRegister.css"
-function UserRegister(){
+function UserRegister(props){
     return (
         <div className="UserReg">
             <h2>Register here</h2>
@@ -20,6 +20,9 @@ function UserRegister(){
                 <input type="password" name="confirmPassword" placeholder="Confirm your password" />
             </div>
             <button className="signIn">Create Account</button>
+            <p className="loginText">Already have an account?
+                <span onClick={props.switch}>Login</span>
+            </p>
         </div>
     )
 }

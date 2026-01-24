@@ -17,9 +17,9 @@ body{
     background-repeat: no-repeat;
     height:100%;
 }
-.UserReg{
-    height:450px;
-    width:400px;
+.UserLogin{
+    height:350px;
+    width:370px;
     padding:40px;
     position: absolute;
     top:20%;
@@ -43,13 +43,13 @@ body{
     left:10px;
     bottom:2px;
 }
-.UserReg h2{
+.UserLogin h2{
     margin-bottom: 30px;
     margin-left:80px;
     font-size:26px;
     letter-spacing:0.5px;
 }
-.signIn{
+.Login{
     margin:10px 100px;
     width:130px;
     height:30px;
@@ -60,20 +60,20 @@ body{
     background: linear-gradient(135deg, #E76F51, #F4A261);
     color:white;
 }
-.signIn:hover{
+.Login:hover{
     transform:translateY(-2px);
 }
-.signIn:active{
+.Login:active{
     transform:translateY(2px);
 }
-.loginText{
+.registerText{
     font-size:18px;
-    letter-spacing: 0.5px;
     position: relative;
-    left:40px;
+    letter-spacing: 0.5px;
     top:10px;
+    left:20px;
 }
-.loginText span{
+.registerText span{
     color:blue;
     text-decoration: underline;
     cursor: pointer;
