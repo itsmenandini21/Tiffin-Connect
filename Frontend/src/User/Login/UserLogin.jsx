@@ -1,4 +1,20 @@
 import "./UserLogin.css";
+async function handleUserLogin(){
+    try{
+        const response=await fetch("http://localhost:5173/api/auth/login",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({email,password})
+        })
+        const data=response.json();
+        console.log(data);
+    }
+    catch(error){
+        console.log("Error:",error);
+    }
+}
 function UserLogin(props){
     return (
         <div className="UserLogin">
