@@ -1,0 +1,53 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Utensils } from 'lucide-react';
+
+export default function Navbar() {
+  return (
+    <motion.nav 
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 100 }}
+      className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 shadow-sm"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          
+          {/* Logo Section */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="p-2 bg-orange-50 rounded-xl group-hover:bg-orange-100 transition-colors">
+              <Utensils className="w-6 h-6 text-orange-600" />
+            </div>
+            <span className="font-bold text-xl tracking-tight text-gray-900">
+              Tiffin<span className="text-orange-600">Connect</span>
+            </span>
+          </Link>
+
+          {/* Nav Links */}
+          <div className="hidden md:flex space-x-8">
+            <Link to="/" className="text-gray-600 hover:text-orange-600 font-medium transition-colors">Home</Link>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-4">
+            <Link 
+              to="/login" 
+              className="hidden md:inline-flex px-5 py-2.5 rounded-xl text-orange-600 font-semibold border-2 border-orange-100 hover:border-orange-500 hover:bg-orange-50 transition-all duration-300"
+            >
+              Log In
+            </Link>
+            <Link 
+              to="/login" 
+              state={{ isRegister: true }}
+              className="hidden md:inline-flex px-5 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-md shadow-orange-200 transition-all duration-300"
+            >
+              Sign Up
+            </Link>
+          </div>
+          
+        </div>
+      </div>
+    </motion.nav>
+  );
+}
