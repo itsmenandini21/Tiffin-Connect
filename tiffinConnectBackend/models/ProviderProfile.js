@@ -25,6 +25,10 @@ const providerProfileSchema = new mongoose.Schema({
     bankDetails: {
         accountNumber: { type: String },
         ifscCode: { type: String }
+    },
+    kitchenGuidelines: {
+        type: String,
+        default: "Fresh daily home-cooked prep. Please cancel or pause at least 12 hours before the delivery slot."
     }
 }, { timestamps: true });
 

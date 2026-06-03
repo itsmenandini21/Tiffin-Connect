@@ -28,10 +28,6 @@ const tiffinServiceSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    monthlyPrice: {
-        type: Number,
-        required: true
-    },
     weeklyMenu: {
         monday: { type: String, default: "" },
         tuesday: { type: String, default: "" },

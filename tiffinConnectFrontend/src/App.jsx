@@ -4,13 +4,15 @@ import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import ProviderDashboard from './pages/ProviderDashboard.jsx';
+import ConsumerDashboard from './pages/consumer/ConsumerDashboard.jsx';
+import MySubscriptions from './pages/consumer/MySubscriptions.jsx';
 import Navbar from './components/Navbar.jsx';
 
 function AppContent() {
   const location = useLocation();
   
   // Routes where the Navbar should be hidden
-  const hideNavbarRoutes = ['/provider-dashboard'];
+  const hideNavbarRoutes = ['/provider-dashboard', '/consumer-dashboard', '/my-subscriptions'];
   const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname);
 
   return (
@@ -23,6 +25,8 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/provider-dashboard" element={<ProviderDashboard />} />
+          <Route path="/consumer-dashboard" element={<ConsumerDashboard />} />
+          <Route path="/my-subscriptions" element={<MySubscriptions />} />
         </Routes>
       </main>
     </div>

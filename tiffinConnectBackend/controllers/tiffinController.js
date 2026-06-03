@@ -1,5 +1,6 @@
 import TiffinService from "../models/TiffinService.js";
 import ProviderProfile from "../models/ProviderProfile.js";
+import Subscription from "../models/Subscription.js";
 const addMenu = async (req, res) => {
     try {
         const newMenu = await TiffinService.create({
@@ -9,7 +10,6 @@ const addMenu = async (req, res) => {
             shift: req.body.shift,
             foodType: req.body.foodType,
             pricePerMeal: req.body.pricePerMeal,
-            monthlyPrice: req.body.monthlyPrice,
             weeklyMenu: req.body.weeklyMenu
         });
         
@@ -21,12 +21,67 @@ const addMenu = async (req, res) => {
     }
 }
 
-const getMenu = async (req, res) => {
-    try {
-        const menu = await TiffinService.find({ providerId: req.provider._id });
-        res.status(200).json(menu);
-    } catch (err) {
-        res.status(500).json({ message: "Internal Server Error" });
+const getProviderServices = async (req,res) =>{
+    try{
+        const currHr = new Date().getHours();
+        let priorityOrder = [];
+        if(currHr >= 4 && currHr <= 10){
+            priorityOrder = ["Breakfast","Lunch","Dinner","AllDay"]
+        }
+        else if(currHr >= 11 && currHr <= 16){
+            priorityOrder =["Lunch","Dinner","Breakfast","AllDay"]
+        }
+        else{
+            priorityOrder = ["Dinner","Breakfast","Lunch","AllDay"]
+        }
+        const menus = await TiffinService.find({providerId : req.provider._id});
+        const menusId = menus.map(menu => menu._id);
+        const subscribers = await Subscription.find({tiffinServiceId :{$in : menusId}}).populate("userId","name phoneNumber address email");
+        const todayDate = new Date().toISOString().split('T')[0];
+        const structuredMenus = menus.map(menu =>{
+            const menuSub = subscribers.filter(sub => 
+                sub.tiffinServiceId.toString() === menu._id.toString() && sub.status === "active"
+            );
+            let skippedCount = 0;
+            let deliverCount = 0;
+            const subscriberDetails = menuSub.map(sub =>{
+                const isSkippedToday = sub.skippedDates.includes(todayDate);
+                if(isSkippedToday) skippedCount++;
+                else deliverCount++;
+                return {
+                    subscriptionId : sub._id,
+                    planType : sub.planType,
+                    specialInstruction : sub.specialInstruction || "",
+                    status : sub.status,
+                    customer:{
+                        name : sub.userId ? sub.userId.name : "Customer",                      
+                        phoneNumber : sub.userId ? sub.userId.phoneNumber : "N/A",
+                        address: sub.userId?.address || {}
+                    }
+                }
+            });
+            return {
+                _id : menu._id,
+                title : menu.title,
+                description : menu.description,
+                shift : menu.shift,
+                foodType: menu.foodType,
+                pricePerMeal: menu.pricePerMeal,
+                weeklyMenu: menu.weeklyMenu,
+                isAvailable: menu.isAvailable,
+                activeSubscribersCount: menuSub.length,
+                skippedTodayCount: skippedCount,
+                deliverTodayCount: deliverCount,
+                subscribers: subscriberDetails
+            }
+        })
+        structuredMenus.sort((a, b) => {
+            return priorityOrder.indexOf(a.shift) - priorityOrder.indexOf(b.shift);
+        });
+        return res.status(200).json(structuredMenus);
+    }
+    catch(err){
+        return res.status(500).json({message: "Internal Server Error"});
     }
 }
 
@@ -77,4 +132,31 @@ const deleteMenu = async (req, res) => {
     }
 }
 
-export { addMenu, getMenu, updateMenu, deleteMenu };
+const getAllServices = async (req, res) => {
+    try {
+        const services = await TiffinService.find({ isAvailable: true })
+            .populate("providerId", "name address phoneNumber");
+            
+        // Fetch ProviderProfile for each service provider and attach it
+        const servicesWithProfile = await Promise.all(services.map(async (service) => {
+            const serviceObj = service.toObject();
+            if (service.providerId) {
+                const profile = await ProviderProfile.findOne({ userId: service.providerId._id });
+                serviceObj.providerProfile = profile ? {
+                    businessName: profile.businessName,
+                    kitchenGuidelines: profile.kitchenGuidelines || "Fresh daily home-cooked prep. Please cancel or pause at least 12 hours before the delivery slot."
+                } : null;
+            } else {
+                serviceObj.providerProfile = null;
+            }
+            return serviceObj;
+        }));
+
+        res.status(200).json(servicesWithProfile);
+    } catch (err) {
+        console.error("Get all services error:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+export { addMenu, getProviderServices, updateMenu, deleteMenu, getAllServices };

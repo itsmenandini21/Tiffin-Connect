@@ -1,11 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChefHat, ShoppingBag, ArrowRight, Star, ShieldCheck, Heart } from 'lucide-react';
 import consumerImg from '../assets/Consumer.png';
 import producerImg from '../assets/Producer.png';
 
 export default function Home() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+    if (token && storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        if (user.role === "provider") {
+          navigate("/provider-dashboard");
+        } else {
+          navigate("/consumer-dashboard");
+        }
+      } catch (e) {
+        console.error("Session parse error: ", e);
+      }
+    }
+  }, [navigate]);
   return (
     <div className="flex flex-col items-center bg-white overflow-hidden relative min-h-screen">
       

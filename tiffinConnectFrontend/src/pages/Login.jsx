@@ -20,6 +20,24 @@ export default function Login() {
   const [baseFormData, setBaseFormData] = useState(null);
 
   useEffect(() => {
+    // If user is already logged in, redirect immediately to dashboard
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+    if (token && storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        if (user.role === "provider") {
+          navigate("/provider-dashboard");
+        } else {
+          navigate("/consumer-dashboard");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [navigate]);
+
+  useEffect(() => {
     // If state is explicitly isRegister: true, show signup. Otherwise, show login.
     if (location.state?.isRegister) {
       setIsLogin(false);
@@ -69,7 +87,7 @@ export default function Login() {
             if (data.user.role === "provider") {
               navigate("/provider-dashboard");
             } else {
-              navigate("/");
+              navigate("/consumer-dashboard");
             }
           } else {
             toast.error(data.message || "Login failed");
@@ -126,7 +144,7 @@ export default function Login() {
         if (data.user.role === "provider") {
           navigate("/provider-dashboard");
         } else {
-          navigate("/");
+          navigate("/consumer-dashboard");
         }
       } else {
         toast.error(data.message || "Registration failed");
