@@ -10,6 +10,7 @@ import GreetingHeader from './GreetingHeader';
 import FilterBar from './FilterBar';
 import KitchenCard from './KitchenCard';
 import MenuModal from './MenuModal';
+import FeedbackModal from './FeedbackModal';
 
 export default function ConsumerDashboard() {
   const navigate = useNavigate();
@@ -39,6 +40,10 @@ export default function ConsumerDashboard() {
   const [kitchens, setKitchens] = useState([]); // Raw data from backend API
   const [filteredKitchens, setFilteredKitchens] = useState([]); // Filtered data shown in grid
   const [loading, setLoading] = useState(true); // Loading spinner state
+
+  // Feedback/Satisfaction Popups state queue
+  const [activeFeedbacks, setActiveFeedbacks] = useState([]);
+  const [currentFeedback, setCurrentFeedback] = useState(null);
 
   // Mock static data to populate the UI instantly (so you can see your design looks perfect!):
   const mockKitchensData = [
@@ -195,6 +200,51 @@ export default function ConsumerDashboard() {
     fetchKitchensFromDatabase();
   }, [navigate]);
 
+  // Fetch active feedback prompts for this user on mount
+  useEffect(() => {
+    const fetchActiveFeedbacks = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+        const response = await fetch(`${API_URL}/feedback/active`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        if (response.ok && data.length > 0) {
+          setActiveFeedbacks(data);
+          setCurrentFeedback(data[0]); // Trigger first popup in queue
+        }
+      } catch (err) {
+        console.error("Error fetching active feedbacks:", err);
+      }
+    };
+
+    fetchActiveFeedbacks();
+  }, []);
+
+  const handleFeedbackSubmit = (completedId) => {
+    const remaining = activeFeedbacks.filter(fb => fb._id !== completedId);
+    setActiveFeedbacks(remaining);
+    if (remaining.length > 0) {
+      setCurrentFeedback(remaining[0]);
+    } else {
+      setCurrentFeedback(null);
+    }
+  };
+
+  const handleFeedbackClose = () => {
+    const remaining = activeFeedbacks.filter(fb => fb._id !== currentFeedback._id);
+    setActiveFeedbacks(remaining);
+    if (remaining.length > 0) {
+      setCurrentFeedback(remaining[0]);
+    } else {
+      setCurrentFeedback(null);
+    }
+  };
+
   // 6. TODO: Implement search & filter client logic!
   useEffect(() => {
     let result = kitchens;
@@ -345,6 +395,17 @@ export default function ConsumerDashboard() {
             kitchen={selectedKitchen}
             initialMode={modalMode}
             onClose={() => setSelectedKitchen(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Active Feedback Prompt Modal */}
+      <AnimatePresence>
+        {currentFeedback && (
+          <FeedbackModal 
+            feedback={currentFeedback}
+            onSubmit={handleFeedbackSubmit}
+            onClose={handleFeedbackClose}
           />
         )}
       </AnimatePresence>

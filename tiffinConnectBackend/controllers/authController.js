@@ -6,9 +6,17 @@ import jwt from "jsonwebtoken";
 const userLogin = async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
+    
+    if (!email || !password) {
+        console.log("Login failed: Missing email or password in request body");
+        return res.status(400).json({ message: "Email and password are required" });
+    }
+
     try {
+        console.log(`Attempting login for email: ${email}`);
         const user = await User.findOne({ email: email });
         if (!user) {
+            console.log(`Login failed: User with email ${email} is not registered`);
             return res.status(400).json({ message: "User not registered" });
         }
         
@@ -34,7 +42,8 @@ const userLogin = async (req, res) => {
             }
         });
     } catch (err) {
-        console.error(err);
+        console.error("!!! LOGIN CONTROLLER EXCEPTION !!!");
+        console.error(err.stack || err);
         res.status(500).json({ message: "Internal server error" });
     }
 }

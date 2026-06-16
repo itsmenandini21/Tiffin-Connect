@@ -1,7 +1,7 @@
 import React from 'react';
-import { ShoppingBag, DollarSign, Coffee, Utensils, Users } from 'lucide-react';
+import { ShoppingBag, DollarSign, Coffee, Utensils, Users, Star } from 'lucide-react';
 
-export default function OverviewTab({ menus, setEditingMenu, setMenuToDelete, onViewSubscribers, setActiveTab }) {
+export default function OverviewTab({ menus, setEditingMenu, setMenuToDelete, onViewReviews, setActiveTab }) {
   
   // Calculate dynamic stats from menus data
   const totalActiveSubscribers = menus.reduce((sum, menu) => sum + (menu.activeSubscribersCount || 0), 0);
@@ -120,33 +120,36 @@ export default function OverviewTab({ menus, setEditingMenu, setMenuToDelete, on
                   </div>
                 </div>
 
-                <div className="border-t border-gray-100 pt-4 flex justify-between text-sm items-center gap-2">
-                  <span className="text-gray-500 font-bold bg-gray-50 border border-gray-100 px-2.5 py-1.5 rounded-xl shrink-0">
-                    Per Meal: <span className="text-gray-900">₹{menu.pricePerMeal}</span>
-                  </span>
-                  
-                  <div className="flex gap-1.5 items-center flex-1 justify-end">
-                    <button 
-                      onClick={() => onViewSubscribers(menu)} 
-                      className="text-orange-600 font-bold bg-orange-50 hover:bg-orange-100 border border-orange-100 hover:border-orange-200 px-3 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1 text-xs"
-                      title="View Active Subscribers list"
-                    >
-                      <Users className="w-3.5 h-3.5" />
-                      <span>Subscribers</span>
-                    </button>
+                <div className="border-t border-gray-100 pt-4 flex flex-col gap-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 font-bold bg-gray-50 border border-gray-100 px-2.5 py-1.5 rounded-xl shrink-0 text-xs">
+                      Per Meal: <span className="text-gray-900">₹{menu.pricePerMeal}</span>
+                    </span>
                     
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setEditingMenu(menu)} 
+                        className="text-gray-500 font-bold hover:text-orange-600 hover:bg-orange-50 border border-gray-200 hover:border-orange-200 px-3 py-1.5 rounded-xl transition-all text-xs"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => setMenuToDelete(menu._id)} 
+                        className="text-red-500 font-bold hover:text-white hover:bg-red-500 border border-red-200 hover:border-red-500 px-3 py-1.5 rounded-xl transition-all text-xs"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
                     <button 
-                      onClick={() => setEditingMenu(menu)} 
-                      className="text-gray-500 font-bold hover:text-orange-600 hover:bg-orange-50 border border-gray-200 hover:border-orange-200 px-3 py-2 rounded-xl transition-all text-xs"
+                      onClick={() => onViewReviews(menu)} 
+                      className="w-full text-amber-600 font-bold bg-amber-50 hover:bg-amber-100 border border-amber-100 hover:border-amber-200 py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 text-xs"
+                      title="View Customer Reviews & Ratings"
                     >
-                      Edit
-                    </button>
-                    
-                    <button 
-                      onClick={() => setMenuToDelete(menu._id)} 
-                      className="text-red-500 font-bold hover:text-white hover:bg-red-500 border border-red-200 hover:border-red-500 px-3 py-2 rounded-xl transition-all text-xs"
-                    >
-                      Delete
+                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                      <span>Reviews</span>
                     </button>
                   </div>
                 </div>

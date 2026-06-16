@@ -14,9 +14,11 @@ import toast from 'react-hot-toast';
 // Import modular sub-components
 import OverviewTab from './provider/OverviewTab';
 import AddMenuTab from './provider/AddMenuTab';
-import SubscribersDrawer from './provider/SubscribersDrawer';
+import ActiveOrdersTab from './provider/ActiveOrdersTab';
+import Review from './provider/Review';
 import EditMenuModal from './provider/EditMenuModal';
 import DeleteMenuModal from './provider/DeleteMenuModal';
+import SettingsTab from './provider/SettingsTab';
 
 export default function ProviderDashboard() {
   const navigate = useNavigate();
@@ -25,7 +27,7 @@ export default function ProviderDashboard() {
   const [menus, setMenus] = useState([]);
   const [editingMenu, setEditingMenu] = useState(null);
   const [menuToDelete, setMenuToDelete] = useState(null);
-  const [selectedMenuForSubscribers, setSelectedMenuForSubscribers] = useState(null);
+  const [selectedMenuForReviews, setSelectedMenuForReviews] = useState(null);
 
   const fetchMenus = async () => {
     try {
@@ -192,7 +194,7 @@ export default function ProviderDashboard() {
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'add-menu', label: 'Add Menu', icon: PlusCircle },
     { id: 'orders', label: 'Active Orders', icon: ShoppingBag },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'settings', label: 'Feedback Manager', icon: Settings },
   ];
 
   if (!user) {
@@ -204,7 +206,7 @@ export default function ProviderDashboard() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex">
+    <div className="h-[calc(100vh-64px)] bg-gray-50 flex overflow-hidden">
       {/* Sidebar */}
       <motion.aside 
         initial={{ x: -250 }}
@@ -228,7 +230,7 @@ export default function ProviderDashboard() {
                 key={item.id}
                 onClick={() => {
                   setActiveTab(item.id);
-                  setSelectedMenuForSubscribers(null); // Close drawer if open
+                  setSelectedMenuForReviews(null); // Close reviews drawer if open
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                   isActive 
@@ -255,7 +257,7 @@ export default function ProviderDashboard() {
       </motion.aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-8 overflow-y-auto relative">
+      <main className="flex-1 p-8 overflow-y-auto relative h-full">
         {/* Background decorative blob */}
         <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 opacity-10 pointer-events-none z-0">
           <div className="w-[500px] h-[500px] bg-orange-400 rounded-full blur-3xl"></div>
@@ -292,7 +294,7 @@ export default function ProviderDashboard() {
                   menus={menus}
                   setEditingMenu={setEditingMenu}
                   setMenuToDelete={setMenuToDelete}
-                  onViewSubscribers={setSelectedMenuForSubscribers}
+                  onViewReviews={setSelectedMenuForReviews}
                   setActiveTab={setActiveTab}
                 />
               </motion.div>
@@ -312,20 +314,30 @@ export default function ProviderDashboard() {
               </motion.div>
             )}
 
-            {/* Other tabs placeholders */}
-            {(activeTab === 'orders' || activeTab === 'settings') && (
-              <motion.div 
-                key={activeTab}
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                exit={{ opacity: 0 }}
-                className="bg-white p-12 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col items-center text-center"
+            {/* Settings Tab */}
+            {activeTab === 'settings' && (
+              <motion.div
+                key="settings-wrapper"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
               >
-                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                  <Settings className="w-10 h-10 text-gray-400 animate-spin-slow" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">Coming Soon</h3>
-                <p className="text-gray-500 mt-2">We are currently building this feature!</p>
+                <SettingsTab 
+                  menus={menus}
+                  setActiveTab={setActiveTab}
+                />
+              </motion.div>
+            )}
+
+            {/* Orders Tab */}
+            {activeTab === 'orders' && (
+              <motion.div 
+                key="orders"
+                initial={{ opacity: 0, y: 10 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <ActiveOrdersTab menus={menus} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -352,12 +364,14 @@ export default function ProviderDashboard() {
           )}
         </AnimatePresence>
 
-        {/* Subscribers Details sliding overlay drawer */}
+
+
+        {/* Reviews Details sliding overlay drawer */}
         <AnimatePresence>
-          {selectedMenuForSubscribers && (
-            <SubscribersDrawer 
-              menu={selectedMenuForSubscribers}
-              onClose={() => setSelectedMenuForSubscribers(null)}
+          {selectedMenuForReviews && (
+            <Review 
+              menu={selectedMenuForReviews}
+              onClose={() => setSelectedMenuForReviews(null)}
             />
           )}
         </AnimatePresence>
