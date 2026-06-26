@@ -77,10 +77,7 @@ export default function Home() {
 
         <div className="max-w-7xl px-4 sm:px-6 lg:px-8 text-center relative z-10 w-full">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500/10 to-amber-500/10 text-orange-700 text-sm font-extrabold mb-8 border border-orange-200/50 shadow-sm backdrop-blur-sm">
-              <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
-              The #1 Tiffin Network in India
-            </span>
+
             
             <h1 className="text-6xl sm:text-8xl font-black text-gray-900 tracking-tight mb-8 leading-[1.05]">
               Ghar ka Khana, <br className="hidden sm:block"/>
@@ -95,17 +92,17 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link to="/login" state={{ isRegister: true }} className="flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-8 py-4.5 rounded-2xl font-black text-lg shadow-xl shadow-orange-500/30 hover:shadow-orange-500/40 hover:from-orange-600 hover:to-amber-600 transition-all w-full sm:w-auto">
-                  <ShoppingBag className="w-6 h-6" />
+                <Link to="/login" state={{ isRegister: true }} className="flex items-center justify-center gap-3 bg-white border-2 border-transparent text-orange-600 px-8 py-4.5 rounded-2xl font-black text-lg shadow-lg hover:shadow-xl hover:bg-gradient-to-r hover:from-orange-500 hover:to-amber-500 hover:text-white transition-all w-full sm:w-auto group">
+                  <ShoppingBag className="w-6 h-6 transition-colors" />
                   Order Food Now
                 </Link>
               </motion.div>
               
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link to="/login" state={{ isRegister: true }} className="flex items-center justify-center gap-3 bg-white text-gray-800 border-2 border-gray-200 px-8 py-4.5 rounded-2xl font-bold text-lg hover:border-orange-500 hover:text-orange-600 hover:bg-orange-50/50 hover:shadow-lg transition-all w-full sm:w-auto group">
-                  <ChefHat className="w-6 h-6 text-gray-500 group-hover:text-orange-500 transition-colors" />
+                <Link to="/login" state={{ isRegister: true }} className="flex items-center justify-center gap-3 bg-white text-orange-600 border-2 border-gray-200 px-8 py-4.5 rounded-2xl font-bold text-lg hover:bg-gradient-to-r hover:from-orange-500 hover:to-amber-500 hover:text-white hover:border-transparent hover:shadow-lg transition-all w-full sm:w-auto group">
+                  <ChefHat className="w-6 h-6 text-orange-500 group-hover:text-white transition-colors" />
                   Become a Chef
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 group-hover:text-white transition-transform" />
                 </Link>
               </motion.div>
             </div>

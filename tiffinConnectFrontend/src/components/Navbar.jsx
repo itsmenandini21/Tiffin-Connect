@@ -16,11 +16,12 @@ export default function Navbar() {
   }
 
   const location = useLocation();
+  const isHomePage = location.pathname === '/';
   const isLoginPage = location.pathname === '/login';
   
   // If on login page, check if we are in register mode or login mode
-  // If not on login page, default to Sign Up being the primary button
-  const isRegisterActive = isLoginPage ? (location.state?.isRegister === true) : true;
+  // If not on login page, neither is active
+  const isRegisterActive = isLoginPage ? (location.state?.isRegister === true) : false;
   const isLoginActive = isLoginPage ? (!location.state?.isRegister) : false;
 
   const handleLogout = () => {
@@ -58,7 +59,16 @@ export default function Navbar() {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4">
-            <Link to="/" className="text-gray-600 hover:text-orange-600 font-medium transition-colors hidden md:block mr-2">Home</Link>
+            <Link 
+              to="/" 
+              className={`hidden md:inline-flex px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 mr-2 ${
+                isHomePage
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-200 hover:from-orange-600 hover:to-amber-600'
+                  : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
+              }`}
+            >
+              Home
+            </Link>
             {user ? (
               <>
                 <Link 
