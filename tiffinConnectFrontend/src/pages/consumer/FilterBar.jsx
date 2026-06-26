@@ -1,5 +1,5 @@
 import React from 'react';
-import { Leaf, Flame, Sparkles, Star, ShieldCheck } from 'lucide-react';
+import { Leaf, Flame, Sparkles, Star, ShieldCheck, Sunrise, Sun, Moon, Clock } from 'lucide-react';
 
 export default function FilterBar({ activeFilters, onFilterToggle }) {
   // ==========================================
@@ -25,7 +25,9 @@ export default function FilterBar({ activeFilters, onFilterToggle }) {
     vegOnly: false,
     nonVegOnly: false,
     highRated: false,
-    spicyLevel: '',
+    morning: false,
+    lunch: false,
+    dinner: false,
   };
 
   const toggle = onFilterToggle || (() => {});
@@ -34,96 +36,105 @@ export default function FilterBar({ activeFilters, onFilterToggle }) {
     <div className="flex flex-col gap-4 mb-8">
       {/* Label/Header for filters */}
       <div className="flex items-center gap-2">
-        <Sparkles className="w-5 h-5 text-orange-500" />
-        <h2 className="text-lg font-bold text-gray-800">Customize Your Taste</h2>
+        <Sparkles className="w-5 h-5 text-[#FF7A00]" />
+        <h2 className="text-lg font-bold text-[#2D2D2D]">Customize Your Taste</h2>
       </div>
 
       {/* Responsive Filter Container */}
-      <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex flex-wrap gap-x-3 gap-y-4 items-center">
         
-        {/* Veg Only Filter Pill */}
-        <button
-          onClick={() => toggle('vegOnly')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs md:text-sm font-bold border transition-all duration-300 ${
-            filters.vegOnly 
-              ? 'bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-500 text-white shadow-md shadow-emerald-100' 
-              : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-600'
-          }`}
-        >
-          <Leaf className="w-4 h-4" />
-          <span>Veg Only</span>
-        </button>
-
-        {/* Non-Veg Filter Pill */}
-        <button
-          onClick={() => toggle('nonVegOnly')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs md:text-sm font-bold border transition-all duration-300 ${
-            filters.nonVegOnly 
-              ? 'bg-gradient-to-r from-rose-500 to-red-500 border-rose-500 text-white shadow-md shadow-rose-100' 
-              : 'bg-white border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-600'
-          }`}
-        >
-          <div className="w-2.5 h-2.5 rounded-full bg-red-600 border border-white" />
-          <span>Non-Veg</span>
-        </button>
-
-        {/* High Rated (4.5+) Filter Pill */}
-        <button
-          onClick={() => toggle('highRated')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs md:text-sm font-bold border transition-all duration-300 ${
-            filters.highRated 
-              ? 'bg-gradient-to-r from-orange-500 to-amber-500 border-orange-500 text-white shadow-md shadow-orange-100' 
-              : 'bg-white border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-600'
-          }`}
-        >
-          <Star className="w-4 h-4 fill-current" />
-          <span>Highly Rated (4.5+)</span>
-        </button>
-
-        {/* Divider */}
-        <div className="hidden sm:block h-6 w-px bg-gray-200 mx-1" />
-
-        {/* Spicy Filter Options */}
-        <div className="flex gap-2 items-center">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider hidden md:inline">Spice:</span>
-          
-          {/* Mild */}
+        {/* Dietary Group */}
+        <div className="flex items-center gap-2 p-1 bg-white/40 backdrop-blur-sm rounded-full border border-white/60 shadow-sm">
+          {/* Veg Only */}
           <button
-            onClick={() => toggle('mildSpice')}
-            className={`px-3.5 py-2 rounded-full text-xs md:text-sm font-bold border transition-all duration-300 ${
-              filters.mildSpice 
-                ? 'bg-orange-50 border-orange-400 text-orange-700 font-extrabold' 
-                : 'bg-white border-gray-200 text-gray-600 hover:border-orange-200 hover:text-orange-500'
+            onClick={() => toggle('vegOnly')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition-all duration-300 ${
+              filters.vegOnly 
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30' 
+                : 'bg-transparent text-gray-600 hover:bg-white/80'
             }`}
           >
-            Mild 🍲
+            <Leaf className="w-4 h-4" />
+            Veg Only
           </button>
 
-          {/* Medium */}
+          {/* Non-Veg */}
           <button
-            onClick={() => toggle('mediumSpice')}
-            className={`px-3.5 py-2 rounded-full text-xs md:text-sm font-bold border transition-all duration-300 ${
-              filters.mediumSpice 
-                ? 'bg-orange-100 border-orange-500 text-orange-800 font-extrabold' 
-                : 'bg-white border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-500'
+            onClick={() => toggle('nonVegOnly')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition-all duration-300 ${
+              filters.nonVegOnly 
+                ? 'bg-gradient-to-r from-rose-500 to-red-500 text-white shadow-lg shadow-rose-500/30' 
+                : 'bg-transparent text-gray-600 hover:bg-white/80'
             }`}
           >
-            Medium 🌶️
-          </button>
-
-          {/* Spicy */}
-          <button
-            onClick={() => toggle('hotSpice')}
-            className={`px-3.5 py-2 rounded-full text-xs md:text-sm font-bold border transition-all duration-300 ${
-              filters.hotSpice 
-                ? 'bg-red-50 border-red-500 text-red-700 font-extrabold shadow-sm' 
-                : 'bg-white border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-500'
-            }`}
-          >
-            Spicy 🌶️🌶️
+            <div className={`w-2.5 h-2.5 rounded-full border border-current ${filters.nonVegOnly ? 'bg-white' : 'bg-red-500'}`} />
+            Non-Veg
           </button>
         </div>
 
+        {/* Separator */}
+        <div className="w-px h-8 bg-gray-300/50 hidden md:block"></div>
+
+        {/* Meal Time Group */}
+        <div className="flex items-center gap-2 p-1 bg-white/40 backdrop-blur-sm rounded-full border border-white/60 shadow-sm">
+          {/* Morning */}
+          <button
+            onClick={() => toggle('morning')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition-all duration-300 ${
+              filters.morning 
+                ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-lg shadow-amber-500/30' 
+                : 'bg-transparent text-gray-600 hover:bg-white/80'
+            }`}
+          >
+            <Sunrise className="w-4 h-4" />
+            Breakfast
+          </button>
+
+          {/* Lunch */}
+          <button
+            onClick={() => toggle('lunch')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition-all duration-300 ${
+              filters.lunch 
+                ? 'bg-gradient-to-r from-[#FF7A00] to-[#E56700] text-white shadow-lg shadow-[#FF7A00]/30' 
+                : 'bg-transparent text-gray-600 hover:bg-white/80'
+            }`}
+          >
+            <Sun className="w-4 h-4" />
+            Lunch
+          </button>
+
+          {/* Dinner */}
+          <button
+            onClick={() => toggle('dinner')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition-all duration-300 ${
+              filters.dinner 
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30' 
+                : 'bg-transparent text-gray-600 hover:bg-white/80'
+            }`}
+          >
+            <Moon className="w-4 h-4" />
+            Dinner
+          </button>
+        </div>
+
+        {/* Separator */}
+        <div className="w-px h-8 bg-gray-300/50 hidden md:block"></div>
+
+        {/* Rating Group */}
+        <div className="flex items-center gap-2 p-1 bg-white/40 backdrop-blur-sm rounded-full border border-white/60 shadow-sm">
+          {/* High Rated */}
+          <button
+            onClick={() => toggle('highRated')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition-all duration-300 ${
+              filters.highRated 
+                ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white shadow-lg shadow-yellow-500/30' 
+                : 'bg-transparent text-gray-600 hover:bg-white/80'
+            }`}
+          >
+            <Star className={`w-4 h-4 ${filters.highRated ? 'fill-white' : 'fill-yellow-500 text-yellow-500'}`} />
+            Highly Rated (4.5+)
+          </button>
+        </div>
       </div>
     </div>
   );

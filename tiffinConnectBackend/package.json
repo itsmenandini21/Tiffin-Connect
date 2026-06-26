@@ -2,7 +2,7 @@
   "name": "tiffinconnectbackend",
   "version": "1.0.0",
   "main": "server.js",
-  "type" : "module",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
@@ -15,8 +15,10 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "google-auth-library": "^10.7.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.2",
+    "node-cron": "^4.5.0",
     "nodemon": "^3.1.14"
   }
 }

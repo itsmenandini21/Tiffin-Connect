@@ -5,35 +5,66 @@ import TiffinService from "../models/TiffinService.js"
 const getMySubscriptions = async (req,res) =>{
     try{
         const subscriptions = await Subscription.find({userId:req.user._id}).populate("tiffinServiceId");
-        return res.status(200).json(subscriptions);
+        
+        // Filter out subscriptions where the associated tiffin service was deleted
+        const validSubscriptions = subscriptions.filter(sub => sub.tiffinServiceId !== null);
+        
+        return res.status(200).json(validSubscriptions);
     }
     catch(err){
-        return res.status(500).json({message : "Internal Server Error"});
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
 }
 
 const createSubscription = async(req,res)=>{
     try{
-        const existingSubscription= await Subscription.findOne({userId:req.user._id,tiffinServiceId:req.body.tiffinServiceId});
-        if(existingSubscription){
-            return res.status(400).json({message:"Cannot subscribe"});
+        const existingSubscription = await Subscription.findOne({ 
+            userId: req.user._id, 
+            tiffinServiceId: req.body.tiffinServiceId,
+            status: { $in: ["active", "paused"] }
+        });
+        if (existingSubscription) {
+            return res.status(400).json({ message: "Cannot subscribe - already have an active subscription" });
         }
         const plan = req.body.planType;
         const stDate = new Date();
+        
+        // New Validity Rules
+        let totalMeals = 0;
+        let validityDays = 0;
+        if (plan === "weekly") {
+            totalMeals = 7;
+            validityDays = 10;
+        } else if (plan === "monthly") {
+            totalMeals = 30;
+            validityDays = 40;
+        } else if (plan === "yearly") {
+            totalMeals = 365;
+            validityDays = 400;
+        }
+
+        const maxValidityDt = new Date(stDate);
+        maxValidityDt.setDate(maxValidityDt.getDate() + validityDays);
+
+        // Legacy dates (kept for backward compatibility with older UI)
         const daysToAdd = plan == "weekly" ? 7 : (plan == "yearly") ? 365 : 30;
         const originalEndDt = new Date(stDate);
         originalEndDt.setDate(originalEndDt.getDate() + daysToAdd);
+        
         const newSubscription = await Subscription.create({
             userId:req.user._id,
             tiffinServiceId:req.body.tiffinServiceId,
             planType:req.body.planType,
             startDate:stDate,
-            originalEndDate:originalEndDt
+            originalEndDate:originalEndDt,
+            totalMeals: totalMeals,
+            mealsRemaining: totalMeals,
+            maxValidityDate: maxValidityDt
         })
         return res.status(200).json(newSubscription);
     }
      catch(err){
-        return res.status(500).json({message:"Internal Server error"});
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
      }
 }
 
@@ -52,7 +83,7 @@ const pauseSubscription =async(req,res)=>{
         return res.status(200).json({message:"Subscription updated",updatedSubscription});
     }
     catch(err){
-        return res.status(500).json({message:"Internal Server Error"});
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
 }
 
@@ -63,7 +94,7 @@ const cancelSubscription = async (req,res)=>{
         return res.status(200).json({message:"Successfully deleted",deleteSubscription});
     }
     catch(err){
-        return res.status(500).json({message:"Internal server error"});
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
 }
 
@@ -87,7 +118,7 @@ const toggleSubscripton = async(req,res) =>{
         return res.status(200).json({message : "Updated successfully",subscription});
     }
     catch(err){
-        return res.status(500).json({message :"Internal server error"});
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
 }
 
@@ -103,11 +134,65 @@ const updateInstruction = async (req,res) =>{
 
     }
     catch(err){
-        return res.status(500).json({message:"Internal Server Error"});
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
+    }
+}
+const updateSingleDeliveryStatus = async (req,res) =>{
+    try{
+        const subscriptionId = req.params.id;
+        const status = req.body.status;
+        const subscription = await Subscription.findById(subscriptionId);
+        if (!subscription) {
+            return res.status(404).json({ message: "Subscription not found" });
+        }
+        subscription.deliveryStatus = status;
+        subscription.deliveryStatusUpdatedAt = new Date();
+        await subscription.save();
+        return res.status(200).json({message : "Status updated", subscription});
+    }
+    catch(err){
+        console.error("updateSingleDeliveryStatus error:", err);
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
 }
 
-export {getMySubscriptions,createSubscription,pauseSubscription,cancelSubscription,toggleSubscripton,updateInstruction};
+const updateStatusOfAll = async (req,res) =>{
+    try{
+        const tiffinServiceId = req.params.id;
+        const status = req.body.status;
+        
+        const query = { tiffinServiceId: tiffinServiceId, status: "active" };
+        if (status === "dispatched") {
+            query.deliveryStatus = "pending";
+        }
+        
+        await Subscription.updateMany(
+            query,
+            { 
+                $set: { 
+                    deliveryStatus: status,
+                    deliveryStatusUpdatedAt: new Date()
+                } 
+            }
+        );
+        return res.status(200).json({message : "updated successfully"});
+    }
+    catch(err){
+        console.error("updateStatusOfAll error:", err);
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
+    }
+}
+
+export {
+    getMySubscriptions,
+    createSubscription,
+    pauseSubscription,
+    cancelSubscription,
+    toggleSubscripton,
+    updateInstruction,
+    updateSingleDeliveryStatus,
+    updateStatusOfAll
+};
 
 
 

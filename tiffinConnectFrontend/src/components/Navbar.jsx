@@ -1,9 +1,41 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Utensils } from 'lucide-react';
 
 export default function Navbar() {
+  const token = localStorage.getItem("token");
+  const storedUser = localStorage.getItem("user");
+  let user = null;
+  if (token && storedUser) {
+    try {
+      user = JSON.parse(storedUser);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const location = useLocation();
+  const isLoginPage = location.pathname === '/login';
+  
+  // If on login page, check if we are in register mode or login mode
+  // If not on login page, default to Sign Up being the primary button
+  const isRegisterActive = isLoginPage ? (location.state?.isRegister === true) : true;
+  const isLoginActive = isLoginPage ? (!location.state?.isRegister) : false;
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.reload();
+  };
+
+  const getDashboardLink = () => {
+    if (!user) return "/login";
+    if (user.role === "admin") return "/admin-dashboard";
+    if (user.role === "provider") return "/provider-dashboard";
+    return "/consumer-dashboard";
+  };
+
   return (
     <motion.nav 
       initial={{ y: -100 }}
@@ -24,26 +56,50 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Nav Links */}
-          <div className="hidden md:flex space-x-8">
-            <Link to="/" className="text-gray-600 hover:text-orange-600 font-medium transition-colors">Home</Link>
-          </div>
-
           {/* Action Buttons */}
           <div className="flex items-center gap-4">
-            <Link 
-              to="/login" 
-              className="hidden md:inline-flex px-5 py-2.5 rounded-xl text-orange-600 font-semibold border-2 border-orange-100 hover:border-orange-500 hover:bg-orange-50 transition-all duration-300"
-            >
-              Log In
-            </Link>
-            <Link 
-              to="/login" 
-              state={{ isRegister: true }}
-              className="hidden md:inline-flex px-5 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-md shadow-orange-200 transition-all duration-300"
-            >
-              Sign Up
-            </Link>
+            <Link to="/" className="text-gray-600 hover:text-orange-600 font-medium transition-colors hidden md:block mr-2">Home</Link>
+            {user ? (
+              <>
+                <Link 
+                  to={getDashboardLink()} 
+                  className="inline-flex px-5 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-md shadow-orange-200 transition-all duration-300"
+                >
+                  Go to Dashboard
+                </Link>
+                <button 
+                  onClick={handleLogout}
+                  className="inline-flex px-5 py-2.5 rounded-xl text-red-650 hover:text-red-700 font-semibold border border-red-200 hover:bg-red-50 transition-all duration-300"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link 
+                  to="/login"
+                  state={{ isRegister: false }} 
+                  className={`hidden md:inline-flex px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
+                    isLoginActive
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-200 hover:from-orange-600 hover:to-amber-600'
+                      : 'text-orange-600 border-2 border-orange-100 hover:border-orange-500 hover:bg-orange-50'
+                  }`}
+                >
+                  Log In
+                </Link>
+                <Link 
+                  to="/login" 
+                  state={{ isRegister: true }}
+                  className={`hidden md:inline-flex px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
+                    isRegisterActive
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-200 hover:from-orange-600 hover:to-amber-600'
+                      : 'text-orange-600 border-2 border-orange-100 hover:border-orange-500 hover:bg-orange-50'
+                  }`}
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
           
         </div>

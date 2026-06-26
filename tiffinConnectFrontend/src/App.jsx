@@ -6,13 +6,14 @@ import Login from './pages/Login.jsx';
 import ProviderDashboard from './pages/ProviderDashboard.jsx';
 import ConsumerDashboard from './pages/consumer/ConsumerDashboard.jsx';
 import MySubscriptions from './pages/consumer/MySubscriptions.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
 import Navbar from './components/Navbar.jsx';
 
 function AppContent() {
   const location = useLocation();
   
   // Routes where the Navbar should be hidden
-  const hideNavbarRoutes = ['/provider-dashboard', '/consumer-dashboard', '/my-subscriptions'];
+  const hideNavbarRoutes = ['/provider-dashboard', '/consumer-dashboard', '/my-subscriptions', '/admin-dashboard'];
   const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname);
 
   return (
@@ -27,6 +28,7 @@ function AppContent() {
           <Route path="/provider-dashboard" element={<ProviderDashboard />} />
           <Route path="/consumer-dashboard" element={<ConsumerDashboard />} />
           <Route path="/my-subscriptions" element={<MySubscriptions />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
         </Routes>
       </main>
     </div>

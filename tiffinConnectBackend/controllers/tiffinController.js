@@ -1,6 +1,7 @@
 import TiffinService from "../models/TiffinService.js";
 import ProviderProfile from "../models/ProviderProfile.js";
 import Subscription from "../models/Subscription.js";
+import Review from "../models/Review.js";
 const addMenu = async (req, res) => {
     try {
         const newMenu = await TiffinService.create({
@@ -8,8 +9,12 @@ const addMenu = async (req, res) => {
             title: req.body.title,
             description: req.body.description,
             shift: req.body.shift,
+            startTime: req.body.startTime,
+            endTime: req.body.endTime,
             foodType: req.body.foodType,
             pricePerMeal: req.body.pricePerMeal,
+            coverImage: req.body.coverImage || "",
+            menuImages: req.body.menuImages || [],
             weeklyMenu: req.body.weeklyMenu
         });
         
@@ -17,7 +22,7 @@ const addMenu = async (req, res) => {
         res.status(201).json({ message: "Menu added successfully", menu: newMenu });
     } catch (err) {
         console.error("Error adding menu:", err);
-        res.status(500).json({ message: "Internal Server Error" });
+        res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
 }
 
@@ -44,20 +49,26 @@ const getProviderServices = async (req,res) =>{
             );
             let skippedCount = 0;
             let deliverCount = 0;
-            const subscriberDetails = menuSub.map(sub =>{
+            let subscriberDetails = [];
+            menuSub.forEach(sub =>{
                 const isSkippedToday = sub.skippedDates.includes(todayDate);
-                if(isSkippedToday) skippedCount++;
-                else deliverCount++;
-                return {
-                    subscriptionId : sub._id,
-                    planType : sub.planType,
-                    specialInstruction : sub.specialInstruction || "",
-                    status : sub.status,
-                    customer:{
-                        name : sub.userId ? sub.userId.name : "Customer",                      
-                        phoneNumber : sub.userId ? sub.userId.phoneNumber : "N/A",
-                        address: sub.userId?.address || {}
-                    }
+                if(isSkippedToday) {
+                    skippedCount++;
+                } else {
+                    deliverCount++;
+                    subscriberDetails.push({
+                        subscriptionId : sub._id,
+                        planType : sub.planType,
+                        specialInstruction : sub.specialInstruction || "",
+                        status : sub.status,
+                        deliveryStatus : sub.deliveryStatus || "pending",
+                        deliveryStatusUpdatedAt : sub.deliveryStatusUpdatedAt || null,
+                        customer:{
+                            name : sub.userId ? sub.userId.name : "Customer",                      
+                            phoneNumber : sub.userId ? sub.userId.phoneNumber : "N/A",
+                            address: sub.userId?.address || {}
+                        }
+                    });
                 }
             });
             return {
@@ -65,8 +76,12 @@ const getProviderServices = async (req,res) =>{
                 title : menu.title,
                 description : menu.description,
                 shift : menu.shift,
+                startTime: menu.startTime,
+                endTime: menu.endTime,
                 foodType: menu.foodType,
                 pricePerMeal: menu.pricePerMeal,
+                coverImage: menu.coverImage,
+                menuImages: menu.menuImages,
                 weeklyMenu: menu.weeklyMenu,
                 isAvailable: menu.isAvailable,
                 activeSubscribersCount: menuSub.length,
@@ -81,7 +96,7 @@ const getProviderServices = async (req,res) =>{
         return res.status(200).json(structuredMenus);
     }
     catch(err){
-        return res.status(500).json({message: "Internal Server Error"});
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
 }
 
@@ -97,6 +112,10 @@ const updateMenu = async (req, res) => {
             return res.status(404).json({ message: "Menu not found or unauthorized" });
         }
         
+        // Prevent provider from bypassing admin status controls or changing ownership
+        delete req.body.isActive;
+        delete req.body.providerId;
+
         // 2. Use findByIdAndUpdate to apply changes and get the updated document back
         const updatedMenu = await TiffinService.findByIdAndUpdate(
             menuId,
@@ -107,7 +126,7 @@ const updateMenu = async (req, res) => {
         res.status(200).json({ message: "Menu updated successfully", updatedMenu });
     } catch (err) {
         console.error("Update error:", err);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
 }
 
@@ -125,21 +144,44 @@ const deleteMenu = async (req, res) => {
             return res.status(404).json({ message: "Menu not found or unauthorized to delete" });
         }
         
+        // Automatically remove all subscriptions tied to this deleted menu
+        await Subscription.deleteMany({ tiffinServiceId: menuId });
+        
         return res.status(200).json({ message: "Menu deleted successfully" });
     } catch (err) {
         console.error("Delete error:", err);
-        return res.status(500).json({ message: "Internal Server Error" });
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
 }
 
 const getAllServices = async (req, res) => {
     try {
-        const services = await TiffinService.find({ isAvailable: true })
-            .populate("providerId", "name address phoneNumber");
+        // Fetch verified provider profiles
+        const verifiedProfiles = await ProviderProfile.find({ isVerified: true }).select("userId");
+        const verifiedProviderIds = verifiedProfiles.map(p => p.userId.toString());
+
+        const services = await TiffinService.find({ 
+            isAvailable: { $ne: false }, 
+            isActive: { $ne: false },
+            providerId: { $in: verifiedProviderIds }
+        }).populate("providerId", "name address phoneNumber");
             
         // Fetch ProviderProfile for each service provider and attach it
         const servicesWithProfile = await Promise.all(services.map(async (service) => {
             const serviceObj = service.toObject();
+            
+            // Calculate real average rating from the reviews database
+            const reviews = await Review.find({ tiffinServiceId: service._id });
+            const avgRating = reviews.length > 0
+                ? parseFloat((reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1))
+                : 0; // default to 0 for fresh kitchens
+            
+            // Calculate real orders count from active/paused subscriptions
+            const ordersCount = await Subscription.countDocuments({ tiffinServiceId: service._id });
+            
+            serviceObj.rating = avgRating;
+            serviceObj.ordersCount = ordersCount;
+
             if (service.providerId) {
                 const profile = await ProviderProfile.findOne({ userId: service.providerId._id });
                 serviceObj.providerProfile = profile ? {
@@ -155,7 +197,7 @@ const getAllServices = async (req, res) => {
         res.status(200).json(servicesWithProfile);
     } catch (err) {
         console.error("Get all services error:", err);
-        res.status(500).json({ message: "Internal Server Error" });
+        res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
 }
 

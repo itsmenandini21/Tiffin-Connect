@@ -19,6 +19,16 @@ const tiffinServiceSchema = new mongoose.Schema({
         enum: ["Lunch", "Dinner", "Breakfast", "All Day"],
         required: true
     },
+    startTime: {
+        type: String,
+        required: true,
+        default: "12:00"
+    },
+    endTime: {
+        type: String,
+        required: true,
+        default: "14:00"
+    },
     foodType: {
         type: String,
         enum: ["Veg", "Non-Veg", "Vegan", "Jain"],
@@ -27,6 +37,14 @@ const tiffinServiceSchema = new mongoose.Schema({
     pricePerMeal: {
         type: Number,
         required: true
+    },
+    coverImage: {
+        type: String,
+        default: ""
+    },
+    menuImages: {
+        type: [String],
+        default: []
     },
     weeklyMenu: {
         monday: { type: String, default: "" },
@@ -40,6 +58,10 @@ const tiffinServiceSchema = new mongoose.Schema({
     isAvailable: {
         type: Boolean,
         default: true // Provider can toggle this to stop accepting new orders for this specific service
+    },
+    isActive: {
+        type: Boolean,
+        default: true // Admin can toggle this to suspend the service for violating guidelines
     }
 }, { timestamps: true });
 

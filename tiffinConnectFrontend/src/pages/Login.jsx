@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Mail, Lock, ArrowRight, Utensils, User, Phone, MapPin, Building, Map, Briefcase, FileText, CreditCard, X, ChefHat } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
   const location = useLocation();
@@ -26,7 +27,9 @@ export default function Login() {
     if (token && storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        if (user.role === "provider") {
+        if (user.role === "admin") {
+          navigate("/admin-dashboard");
+        } else if (user.role === "provider") {
           navigate("/provider-dashboard");
         } else {
           navigate("/consumer-dashboard");
@@ -45,6 +48,44 @@ export default function Login() {
       setIsLogin(true);
     }
   }, [location.state]);
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const toastId = toast.loading("Signing in with Google...");
+    try {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+      const response = await fetch(`${API_URL}/auth/google-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential: credentialResponse.credential })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast.success("Logged in successfully via Google!", { id: toastId });
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        
+        // Redirect based on user role
+        if (data.user.role === "admin") {
+          navigate("/admin-dashboard");
+        } else if (data.user.role === "provider") {
+          navigate("/provider-dashboard");
+        } else {
+          navigate("/consumer-dashboard");
+        }
+      } else {
+        toast.error(data.message || "Google authentication failed", { id: toastId });
+      }
+    } catch (error) {
+      console.error("Google Login Frontend Error:", error);
+      toast.error("Could not connect to the server.", { id: toastId });
+    }
+  };
+
+  const handleGoogleFailure = () => {
+    toast.error("Google Sign-In was cancelled or failed.");
+  };
 
   const handleBaseRegistrationSubmit = async (e) => {
     e.preventDefault();
@@ -84,14 +125,22 @@ export default function Login() {
             localStorage.setItem("user", JSON.stringify(data.user));
             
             // Redirect based on user role
-            if (data.user.role === "provider") {
+            if (data.user.role === "admin") {
+              navigate("/admin-dashboard");
+            } else if (data.user.role === "provider") {
               navigate("/provider-dashboard");
             } else {
               navigate("/consumer-dashboard");
             }
           } else {
             toast.error(data.message || "Login failed");
-            setErrors({ email: data.message || "Login failed" });
+            if (data.message?.toLowerCase().includes("password")) {
+              setErrors({ password: data.message });
+            } else if (data.message?.toLowerCase().includes("email") || data.message?.toLowerCase().includes("user")) {
+              setErrors({ email: data.message });
+            } else {
+              setErrors({}); // For generic server errors, rely on the toast, don't highlight email.
+            }
           }
         } catch (error) {
           console.error("Login Error:", error);
@@ -141,7 +190,9 @@ export default function Login() {
         setShowRoleModal(false);
 
         // Redirect based on user role
-        if (data.user.role === "provider") {
+        if (data.user.role === "admin") {
+          navigate("/admin-dashboard");
+        } else if (data.user.role === "provider") {
           navigate("/provider-dashboard");
         } else {
           navigate("/consumer-dashboard");
@@ -155,16 +206,50 @@ export default function Login() {
     }
   };
 
-  const handleProviderSubmit = (e) => {
+  const handleProviderSubmit = async (e) => {
     e.preventDefault();
-    const additionalData = {
-      businessName: e.target.businessName.value,
-      fssaiCertificate: e.target.fssaiCertificate.value,
-      bankAccount: e.target.bankAccount.value,
-      ifscCode: e.target.ifscCode.value,
-      kitchenPhotos: [] // Send empty array for now until file upload is implemented
-    };
-    registerUser("provider", additionalData);
+    const file = e.target.fssaiFile.files[0];
+    
+    if (!file) {
+      toast.error("Please upload your FSSAI certificate document.");
+      return;
+    }
+
+    const toastId = toast.loading("Uploading certificate to Cloudinary...");
+    
+    try {
+      const CLOUD_NAME = "ds94mrgkb";
+      const UPLOAD_PRESET = "tiffinConnect";
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", UPLOAD_PRESET);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: formData
+      });
+
+      const fileData = await res.json();
+      if (!res.ok) {
+        throw new Error(fileData.error?.message || "Failed to upload image to Cloudinary");
+      }
+
+      toast.success("Document uploaded successfully!", { id: toastId });
+
+      const additionalData = {
+        businessName: e.target.businessName.value,
+        fssaiCertificate: fileData.secure_url,
+        bankAccount: e.target.bankAccount.value,
+        ifscCode: e.target.ifscCode.value,
+        kitchenPhotos: [] // Send empty array for now until file upload is implemented
+      };
+      
+      registerUser("provider", additionalData);
+    } catch (err) {
+      console.error("Cloudinary Upload Error:", err);
+      toast.error(err.message || "Failed to upload FSSAI certificate", { id: toastId });
+    }
   };
 
   return (
@@ -214,7 +299,7 @@ export default function Login() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <User className={`h-5 w-5 ${errors.name ? 'text-red-400' : 'text-gray-400'}`} />
                       </div>
-                      <input name="name" type="text" className={`block w-full pl-10 pr-3 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.name ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="John Doe" />
+                      <input name="name" type="text" required className={`block w-full pl-10 pr-3 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.name ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="John Doe" />
                     </div>
                     {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                   </div>
@@ -225,7 +310,7 @@ export default function Login() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Phone className={`h-5 w-5 ${errors.phone ? 'text-red-400' : 'text-gray-400'}`} />
                       </div>
-                      <input name="phone" type="tel" className={`block w-full pl-10 pr-3 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="+91 9876543210" />
+                      <input name="phone" type="tel" required className={`block w-full pl-10 pr-3 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="+91 9876543210" />
                     </div>
                     {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
                   </div>
@@ -236,7 +321,7 @@ export default function Login() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <MapPin className={`h-5 w-5 ${errors.street ? 'text-red-400' : 'text-gray-400'}`} />
                       </div>
-                      <input name="street" type="text" className={`block w-full pl-10 pr-3 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.street ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="123 Main St, Apt 4B" />
+                      <input name="street" type="text" required className={`block w-full pl-10 pr-3 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.street ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="123 Main St, Apt 4B" />
                     </div>
                     {errors.street && <p className="mt-1 text-sm text-red-500">{errors.street}</p>}
                   </div>
@@ -247,7 +332,7 @@ export default function Login() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Building className={`h-5 w-5 ${errors.city ? 'text-red-400' : 'text-gray-400'}`} />
                       </div>
-                      <input name="city" type="text" className={`block w-full pl-10 pr-3 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.city ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="Mumbai" />
+                      <input name="city" type="text" required className={`block w-full pl-10 pr-3 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.city ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="Mumbai" />
                     </div>
                     {errors.city && <p className="mt-1 text-sm text-red-500">{errors.city}</p>}
                   </div>
@@ -259,13 +344,13 @@ export default function Login() {
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <Map className={`h-5 w-5 ${errors.state ? 'text-red-400' : 'text-gray-400'}`} />
                         </div>
-                        <input name="state" type="text" className={`block w-full pl-10 pr-3 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.state ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="MH" />
+                        <input name="state" type="text" required className={`block w-full pl-10 pr-3 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.state ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="MH" />
                       </div>
                       {errors.state && <p className="mt-1 text-sm text-red-500">{errors.state}</p>}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
-                      <input name="pincode" type="text" className={`block w-full px-4 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.pincode ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="400001" />
+                      <input name="pincode" type="text" required className={`block w-full px-4 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors.pincode ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-transparent'}`} placeholder="400001" />
                       {errors.pincode && <p className="mt-1 text-sm text-red-500">{errors.pincode}</p>}
                     </div>
                   </div>
@@ -306,6 +391,29 @@ export default function Login() {
               {isLogin ? 'Sign In' : 'Continue'} <ArrowRight className="w-5 h-5" />
             </motion.button>
           </form>
+
+          {isLogin && (
+            <>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500 font-semibold">Or continue with</span>
+                </div>
+              </div>
+
+              <div className="flex justify-center w-full">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleFailure}
+                  theme="outline"
+                  size="large"
+                  width="384"
+                />
+              </div>
+            </>
+          )}
 
           <p className="mt-8 text-center text-sm text-gray-600">
             {isLogin ? "Don't have an account? " : "Already have an account? "}
@@ -378,10 +486,10 @@ export default function Login() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">FSSAI Certificate Number</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">FSSAI Certificate Document (Image/PDF)</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FileText className="h-5 w-5 text-gray-400" /></div>
-                        <input name="fssaiCertificate" required type="text" className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-amber-500 outline-none transition-all" placeholder="12345678901234" />
+                        <input name="fssaiFile" required type="file" accept="image/*,application/pdf" className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-amber-500 outline-none transition-all text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">

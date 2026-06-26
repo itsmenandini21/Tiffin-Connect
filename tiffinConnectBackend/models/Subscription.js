@@ -18,8 +18,17 @@ const subscriptionSchema = new mongoose.Schema({
     },
     status:{
         type:String,
-        enum:["active","cancelled","paused"],
+        enum:["active","cancelled","paused","completed","expired"],
         default:"active"
+    },
+    deliveryStatus:{
+        type:String,
+        enum:["pending","dispatched","delivered"],
+        default:"pending"
+    },
+    deliveryStatusUpdatedAt:{
+        type:Date,
+        default:Date.now
     },
     startDate:{
         type:Date,
@@ -32,6 +41,18 @@ const subscriptionSchema = new mongoose.Schema({
     extendedEndDate:{
         type:Date,
         default:null
+    },
+    totalMeals: {
+        type: Number,
+        default: 0
+    },
+    mealsRemaining: {
+        type: Number,
+        default: 0
+    },
+    maxValidityDate: {
+        type: Date,
+        default: null
     },
     skippedDates:{
         type: [String],

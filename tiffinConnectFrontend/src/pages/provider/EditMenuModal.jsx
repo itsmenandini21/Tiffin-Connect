@@ -41,7 +41,7 @@ export default function EditMenuModal({ editingMenu, setEditingMenu, handleUpdat
                   />
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-900 mb-2">Food Type</label>
                     <select name="foodType" defaultValue={editingMenu.foodType} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none">
@@ -60,6 +60,26 @@ export default function EditMenuModal({ editingMenu, setEditingMenu, handleUpdat
                       <option>All Day</option>
                     </select>
                   </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-900 mb-2">Start Time</label>
+                    <input 
+                      name="startTime" 
+                      defaultValue={editingMenu.startTime}
+                      required 
+                      type="time" 
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-900 mb-2">End Time</label>
+                    <input 
+                      name="endTime" 
+                      defaultValue={editingMenu.endTime}
+                      required 
+                      type="time" 
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all" 
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -73,6 +93,35 @@ export default function EditMenuModal({ editingMenu, setEditingMenu, handleUpdat
                   />
                 </div>
                 
+                {/* Compact Photo Uploads */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    📸 Update Photos
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-3 bg-orange-50 rounded-xl border border-orange-100">
+                      <p className="text-xs font-bold text-gray-700 mb-1">Cover Image</p>
+                      <input 
+                        type="file" 
+                        name="coverImage" 
+                        accept="image/*"
+                        className="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200"
+                      />
+                    </div>
+                    <div className="p-3 bg-orange-50 rounded-xl border border-orange-100">
+                      <p className="text-xs font-bold text-gray-700 mb-0.5">Menu Gallery (Up to 5)</p>
+                      <p className="text-[9px] font-bold text-orange-600 mb-1 leading-tight">Important: Select all images together at once (Ctrl+Click)</p>
+                      <input 
+                        type="file" 
+                        name="menuImages" 
+                        accept="image/*"
+                        multiple
+                        className="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-bold text-gray-900 mb-2">Description</label>
                   <textarea 
@@ -100,6 +149,7 @@ export default function EditMenuModal({ editingMenu, setEditingMenu, handleUpdat
                           name={dbKey} 
                           defaultValue={editingMenu.weeklyMenu?.[dbKey] || ""} 
                           type="text" 
+                          required
                           className="flex-1 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" 
                         />
                       </div>

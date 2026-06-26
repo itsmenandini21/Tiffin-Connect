@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Sparkles, Soup, RefreshCw } from 'lucide-react';
+import { Soup, RefreshCw } from 'lucide-react';
 
 // Import Co-located dashboard items
 import ConsumerNavbar from '../../components/ConsumerNavbar';
@@ -11,6 +11,7 @@ import FilterBar from './FilterBar';
 import KitchenCard from './KitchenCard';
 import MenuModal from './MenuModal';
 import FeedbackModal from './FeedbackModal';
+import ReviewsDrawer from './ReviewsDrawer';
 
 export default function ConsumerDashboard() {
   const navigate = useNavigate();
@@ -27,9 +28,9 @@ export default function ConsumerDashboard() {
     vegOnly: false,
     nonVegOnly: false,
     highRated: false,
-    mildSpice: false,
-    mediumSpice: false,
-    hotSpice: false
+    morning: false,
+    lunch: false,
+    dinner: false
   });
 
   // 3. Modal control state (holds the kitchen object to view, or null if closed):
@@ -41,9 +42,15 @@ export default function ConsumerDashboard() {
   const [filteredKitchens, setFilteredKitchens] = useState([]); // Filtered data shown in grid
   const [loading, setLoading] = useState(true); // Loading spinner state
 
+  // Drawer review state
+  const [selectedKitchenForReviews, setSelectedKitchenForReviews] = useState(null);
+
   // Feedback/Satisfaction Popups state queue
   const [activeFeedbacks, setActiveFeedbacks] = useState([]);
   const [currentFeedback, setCurrentFeedback] = useState(null);
+
+  // Active subscription IDs for the current user
+  const [myActiveServiceIds, setMyActiveServiceIds] = useState([]);
 
   // Mock static data to populate the UI instantly (so you can see your design looks perfect!):
   const mockKitchensData = [
@@ -153,6 +160,26 @@ export default function ConsumerDashboard() {
         }
 
         const data = await response.json();
+
+        // Fetch current active subscriptions in parallel
+        try {
+          const subResponse = await fetch(`${API_URL}/subscription`, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          });
+          if (subResponse.ok) {
+            const subData = await subResponse.json();
+            const activeIds = subData
+              .filter(sub => ["active", "paused"].includes(sub.status) && sub.tiffinServiceId)
+              .map(sub => (sub.tiffinServiceId._id || sub.tiffinServiceId).toString());
+            setMyActiveServiceIds(activeIds);
+          }
+        } catch (subErr) {
+          console.error("Error fetching subscriptions on dashboard: ", subErr);
+        }
         
         // Standardize the database results to match our frontend property structures perfectly
         const standardizedData = data.map(rawItem => ({
@@ -164,8 +191,8 @@ export default function ConsumerDashboard() {
           isVeg: rawItem.foodType 
             ? ["Veg", "Vegan", "Jain"].includes(rawItem.foodType) 
             : (rawItem.isVeg !== false),
-          rating: rawItem.rating || 4.8,
-          ordersCount: rawItem.ordersCount || 125,
+          rating: (rawItem.rating !== undefined && rawItem.rating !== null) ? rawItem.rating : 0,
+          ordersCount: (rawItem.ordersCount !== undefined && rawItem.ordersCount !== null) ? rawItem.ordersCount : 0,
           providerId: {
             name: rawItem.providerId?.name || "Chef Sunita Sharma",
             address: rawItem.providerId?.address
@@ -175,7 +202,12 @@ export default function ConsumerDashboard() {
               : "Sector 62, Noida"
           },
           menu: rawItem.weeklyMenu || rawItem.menu,
-          providerProfile: rawItem.providerProfile || null
+          providerProfile: rawItem.providerProfile || null,
+          startTime: rawItem.startTime,
+          endTime: rawItem.endTime,
+          coverImage: rawItem.coverImage,
+          menuImages: rawItem.menuImages,
+          shift: rawItem.shift
         }));
 
         if (standardizedData && standardizedData.length > 0) {
@@ -251,11 +283,14 @@ export default function ConsumerDashboard() {
 
     // Search query logic
     if (searchVal.trim() !== "") {
-      result = result.filter(item => 
-        item.serviceName.toLowerCase().includes(searchVal.toLowerCase()) ||
-        item.cuisineType.toLowerCase().includes(searchVal.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchVal.toLowerCase())
-      );
+      result = result.filter(item => {
+        const nameMatch = item.serviceName?.toLowerCase().includes(searchVal.toLowerCase());
+        const chefMatch = item.providerId?.name?.toLowerCase().includes(searchVal.toLowerCase());
+        const addressMatch = item.providerId?.address?.toLowerCase().includes(searchVal.toLowerCase());
+        const cuisineMatch = item.cuisineType?.toLowerCase().includes(searchVal.toLowerCase());
+        const descMatch = item.description?.toLowerCase().includes(searchVal.toLowerCase());
+        return nameMatch || chefMatch || addressMatch || cuisineMatch || descMatch;
+      });
     }
 
     // Veg-Only toggle filter
@@ -270,7 +305,21 @@ export default function ConsumerDashboard() {
 
     // High Rated (4.8+) filter
     if (activeFilters.highRated) {
-      result = result.filter(item => item.rating >= 4.8);
+      result = result.filter(item => item.rating >= 4.5); // Fixed to 4.5+ since UI says "4.5+"
+    }
+
+    // Shift filters (Morning, Lunch, Dinner)
+    // If ANY of the shift filters are active, we only show kitchens that match one of the active shifts.
+    const isShiftFiltering = activeFilters.morning || activeFilters.lunch || activeFilters.dinner;
+    if (isShiftFiltering) {
+      result = result.filter(item => {
+        const itemShift = (item.shift || '').toLowerCase();
+        if (activeFilters.morning && itemShift.includes('morning')) return true;
+        if (activeFilters.morning && itemShift.includes('breakfast')) return true;
+        if (activeFilters.lunch && itemShift.includes('lunch')) return true;
+        if (activeFilters.dinner && itemShift.includes('dinner')) return true;
+        return false;
+      });
     }
 
     setFilteredKitchens(result);
@@ -278,19 +327,50 @@ export default function ConsumerDashboard() {
 
   // Handler to toggle filters
   const handleFilterToggle = (filterKey) => {
-    setActiveFilters(prev => ({
-      ...prev,
-      [filterKey]: !prev[filterKey]
-    }));
+    setActiveFilters(prev => {
+      const newState = { ...prev, [filterKey]: !prev[filterKey] };
+
+      // Make shift filters mutually exclusive
+      if (['morning', 'lunch', 'dinner'].includes(filterKey) && newState[filterKey]) {
+        if (filterKey !== 'morning') newState.morning = false;
+        if (filterKey !== 'lunch') newState.lunch = false;
+        if (filterKey !== 'dinner') newState.dinner = false;
+      }
+      
+      // Make dietary filters mutually exclusive
+      if (filterKey === 'vegOnly' && newState.vegOnly) {
+        newState.nonVegOnly = false;
+      }
+      if (filterKey === 'nonVegOnly' && newState.nonVegOnly) {
+        newState.vegOnly = false;
+      }
+
+      return newState;
+    });
   };
   // ==========================================
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20 relative overflow-hidden">
+    <div className="min-h-screen bg-[#FFF4EC] pb-20 relative overflow-hidden font-sans">
       
-      {/* Decorative Glow sphere background */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute bottom-20 left-0 w-[400px] h-[400px] bg-amber-100/20 rounded-full blur-3xl pointer-events-none -z-10" />
+      {/* Premium Photographic Texture */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-[0.08] mix-blend-multiply" 
+        style={{ 
+          backgroundImage: "url('/bg-pattern.png')", 
+          backgroundSize: 'cover', 
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed'
+        }} 
+      />
+      
+      {/* Warm Peach/Apricot Gradient Overlay (Removes the harsh white) */}
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-[#FFF4EC]/95 via-[#FFE8D6]/80 to-[#FFF0E6]/95 backdrop-blur-[1px]" />
+
+      {/* Decorative Glow sphere background - Richer colors for a painted background effect */}
+      <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-gradient-to-tr from-[#FF7A00]/15 to-amber-400/10 rounded-full blur-[140px] pointer-events-none -z-10" />
+      <div className="absolute top-[40%] left-[-15%] w-[700px] h-[700px] bg-rose-400/10 rounded-full blur-[150px] pointer-events-none -z-10" />
+      <div className="absolute bottom-[-10%] right-[10%] w-[600px] h-[600px] bg-[#FF7A00]/10 rounded-full blur-[120px] pointer-events-none -z-10" />
 
       {/* Global Consumer Navbar */}
       <ConsumerNavbar />
@@ -311,9 +391,9 @@ export default function ConsumerDashboard() {
 
         {/* Grid Section for Kitchen Listings */}
         <div className="flex items-center gap-2 mb-6">
-          <Soup className="w-5 h-5 text-orange-500" />
-          <h2 className="text-xl font-extrabold text-gray-800">Explore Local Kitchens</h2>
-          <span className="text-xs bg-orange-100 text-orange-700 font-bold px-2.5 py-0.5 rounded-full ml-1">
+          <Soup className="w-5 h-5 text-[#FF7A00]" />
+          <h2 className="text-xl font-extrabold text-[#2D2D2D]">Explore Local Kitchens</h2>
+          <span className="text-xs bg-[#FF7A00]/8 text-[#FF7A00] font-bold px-2.5 py-0.5 rounded-full ml-1 border border-[#FF7A00]/15">
             {filteredKitchens.length} Kitchens available
           </span>
         </div>
@@ -321,17 +401,17 @@ export default function ConsumerDashboard() {
         {/* Loading Spinner */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <RefreshCw className="w-8 h-8 text-orange-500 animate-spin" />
-            <p className="text-sm font-bold text-gray-400">Finding nearby fresh home kitchens...</p>
+            <RefreshCw className="w-8 h-8 text-[#FF7A00] animate-spin" />
+            <p className="text-sm font-bold text-[#6B7280]">Finding nearby fresh home kitchens...</p>
           </div>
         ) : (
           <>
             {/* Empty Search Result State */}
             {filteredKitchens.length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm max-w-md mx-auto">
+              <div className="bg-white rounded-3xl p-12 text-center border border-[#FF7A00]/10 shadow-[0_8px_30px_rgba(255,122,0,0.03)] max-w-md mx-auto relative overflow-hidden">
                 <span className="text-4xl">🔍</span>
-                <h3 className="text-lg font-bold text-gray-800 mt-4">No Kitchens Found</h3>
-                <p className="text-xs md:text-sm text-gray-400 mt-2 font-medium">
+                <h3 className="text-lg font-bold text-[#2D2D2D] mt-4">No Kitchens Found</h3>
+                <p className="text-xs md:text-sm text-[#6B7280] mt-2 font-medium">
                   We couldn't find any kitchen matching your search or filters. Try adjusting your preferences!
                 </p>
                 <button 
@@ -341,12 +421,12 @@ export default function ConsumerDashboard() {
                       vegOnly: false,
                       nonVegOnly: false,
                       highRated: false,
-                      mildSpice: false,
-                      mediumSpice: false,
-                      hotSpice: false
+                      morning: false,
+                      lunch: false,
+                      dinner: false
                     });
                   }}
-                  className="mt-5 px-5 py-2.5 bg-orange-50 hover:bg-orange-100 text-orange-600 font-bold text-xs rounded-xl border border-orange-200 transition-colors"
+                  className="mt-5 px-5 py-2.5 bg-[#FFF8F1] hover:bg-[#FF7A00]/5 text-[#FF7A00] font-bold text-xs rounded-xl border border-[#FF7A00]/20 transition-colors"
                 >
                   Clear All Filters
                 </button>
@@ -369,6 +449,7 @@ export default function ConsumerDashboard() {
                     >
                       <KitchenCard 
                         kitchen={kitchen}
+                        isSubscribed={myActiveServiceIds.includes(kitchen._id.toString())}
                         onViewMenu={(k) => {
                           setSelectedKitchen(k);
                           setModalMode("menu");
@@ -376,6 +457,9 @@ export default function ConsumerDashboard() {
                         onSubscribe={(k) => {
                           setSelectedKitchen(k);
                           setModalMode("subscribe");
+                        }}
+                        onViewReviews={(k) => {
+                          setSelectedKitchenForReviews(k);
                         }}
                       />
                     </motion.div>
@@ -393,8 +477,19 @@ export default function ConsumerDashboard() {
         {selectedKitchen && (
           <MenuModal 
             kitchen={selectedKitchen}
+            isSubscribed={myActiveServiceIds.includes(selectedKitchen._id.toString())}
             initialMode={modalMode}
             onClose={() => setSelectedKitchen(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Dynamic Slide-out Reviews Side Panel */}
+      <AnimatePresence>
+        {selectedKitchenForReviews && (
+          <ReviewsDrawer 
+            kitchen={selectedKitchenForReviews}
+            onClose={() => setSelectedKitchenForReviews(null)}
           />
         )}
       </AnimatePresence>

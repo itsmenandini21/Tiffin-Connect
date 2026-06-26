@@ -19,11 +19,21 @@ export default function GreetingHeader({ searchVal, onSearchChange }) {
   const userName = storedUser.name ? storedUser.name.split(" ")[0] : "Nandini";
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-orange-600 to-amber-500 px-6 py-12 md:p-16 shadow-xl shadow-orange-100 mb-8">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FF7A00] to-[#E56700] px-6 py-12 md:p-16 shadow-2xl shadow-[#FF7A00]/20 mb-8 border border-[#FF7A00]/30">
       
+      {/* Background Texture for Header */}
+      <div 
+        className="absolute inset-0 z-0 pointer-events-none opacity-20 mix-blend-color-burn" 
+        style={{ 
+          backgroundImage: "url('/bg-pattern.png')", 
+          backgroundSize: 'cover', 
+          backgroundPosition: 'center',
+        }} 
+      />
+
       {/* Background Decorative Mesh Glow Spheres */}
-      <div className="absolute right-0 top-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-      <div className="absolute left-1/3 bottom-0 w-60 h-60 bg-amber-300/10 rounded-full blur-2xl pointer-events-none -ml-20 -mb-20" />
+      <div className="absolute right-0 top-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20 z-0" />
+      <div className="absolute left-1/3 bottom-0 w-60 h-60 bg-amber-300/10 rounded-full blur-2xl pointer-events-none -ml-20 -mb-20 z-0" />
 
       <div className="relative z-10 max-w-3xl mx-auto text-center">
         
@@ -55,15 +65,15 @@ export default function GreetingHeader({ searchVal, onSearchChange }) {
           className="relative max-w-2xl mx-auto"
         >
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5.5 w-5.5 text-gray-400" />
+            <Search className="h-5.5 w-5.5 text-[#6B7280]" />
           </div>
           
           <input
             type="text"
             value={searchVal || ""}
             onChange={(e) => onSearchChange(e.target.value)} // TODO: Connect to search state in ConsumerDashboard!
-            placeholder="Search by kitchen name, specialty thalis, or local cuisines..."
-            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white text-gray-900 placeholder-gray-400 border-none shadow-lg focus:outline-none focus:ring-4 focus:ring-orange-500/20 text-sm md:text-base font-medium transition-all duration-300"
+            placeholder="Search by kitchen, chef, location (sector), or cuisine..."
+            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white text-[#2D2D2D] placeholder-[#6B7280] border border-[#FF7A00]/10 shadow-lg focus:outline-none focus:ring-4 focus:ring-[#FF7A00]/10 focus:border-[#FF7A00]/40 text-sm md:text-base font-medium transition-all duration-300"
           />
 
           {/* Micro-glow ring under input */}

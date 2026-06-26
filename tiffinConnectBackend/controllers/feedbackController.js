@@ -17,7 +17,7 @@ import Subscription from "../models/Subscription.js";
     }
     catch(err){
         console.error("Error in createFeedback:", err);
-        return res.status(500).json({message : "Internal Server Error"});
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
  }
 
@@ -30,7 +30,7 @@ import Subscription from "../models/Subscription.js";
      }
      catch(err){
          console.error("Error in getFeedbackTemplates:", err);
-         res.status(500).json({message :"Internal Server Error"})
+         res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." })
      }
  }
 
@@ -45,7 +45,7 @@ import Subscription from "../models/Subscription.js";
     }
     catch(err){
         console.error("Error in deleteTemplates:", err);
-        return res.status(500).json({message : "Internal Server Error"});
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
  }
 
@@ -108,7 +108,7 @@ import Subscription from "../models/Subscription.js";
     }
     catch (err) {
         console.error("Error in getActiveFeedBackForUser:", err);
-        return res.status(500).json({ message: "Internal Server Error" });
+        return res.status(500).json({ message: "We are experiencing technical difficulties. Please try again later." });
     }
 }
 
