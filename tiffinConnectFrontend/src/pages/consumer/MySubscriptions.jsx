@@ -16,7 +16,7 @@ import {
   X,
   MessageSquare
 } from 'lucide-react';
-import ConsumerNavbar from '../../components/consumerNavbar';
+import ConsumerNavbar from '../../components/ConsumerNavbar';
 
 export default function MySubscriptions() {
   const navigate = useNavigate();
@@ -236,26 +236,29 @@ export default function MySubscriptions() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF4EC] pb-20 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#FFF4EC] pb-20 relative font-sans">
       
-      {/* Premium Photographic Texture */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-[0.08] mix-blend-multiply" 
-        style={{ 
-          backgroundImage: "url('/bg-pattern.png')", 
-          backgroundSize: 'cover', 
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed'
-        }} 
-      />
-      
-      {/* Warm Peach/Apricot Gradient Overlay (Removes the harsh white) */}
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-[#FFF4EC]/95 via-[#FFE8D6]/80 to-[#FFF0E6]/95 backdrop-blur-[1px]" />
+      {/* Background container with overflow-hidden to contain blur shapes */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {/* Premium Photographic Texture */}
+        <div 
+          className="absolute inset-0 opacity-[0.08] mix-blend-multiply" 
+          style={{ 
+            backgroundImage: "url('/bg-pattern.png')", 
+            backgroundSize: 'cover', 
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed'
+          }} 
+        />
+        
+        {/* Warm Peach/Apricot Gradient Overlay (Removes the harsh white) */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FFF4EC]/95 via-[#FFE8D6]/80 to-[#FFF0E6]/95 backdrop-blur-[1px]" />
 
-      {/* Decorative Glow sphere background - Richer colors for a painted background effect */}
-      <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-gradient-to-tr from-[#FF7A00]/15 to-amber-400/10 rounded-full blur-[140px] pointer-events-none -z-10" />
-      <div className="absolute top-[40%] left-[-15%] w-[700px] h-[700px] bg-rose-400/10 rounded-full blur-[150px] pointer-events-none -z-10" />
-      <div className="absolute bottom-[-10%] right-[10%] w-[600px] h-[600px] bg-[#FF7A00]/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+        {/* Decorative Glow sphere background - Richer colors for a painted background effect */}
+        <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-gradient-to-tr from-[#FF7A00]/15 to-amber-400/10 rounded-full blur-[140px]" />
+        <div className="absolute top-[40%] left-[-15%] w-[700px] h-[700px] bg-rose-400/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-[-10%] right-[10%] w-[600px] h-[600px] bg-[#FF7A00]/10 rounded-full blur-[120px]" />
+      </div>
 
       {/* Navbar component */}
       <ConsumerNavbar />

@@ -49,3 +49,25 @@ export const markAllAsRead = async (req, res) => {
         res.status(500).json({ message: "Failed to update notifications." });
     }
 };
+
+// Create a new notification (usually called internally or by provider)
+export const createNotification = async (req, res) => {
+    try {
+        const { userId, title, message, type, relatedId, actionType, subscriptionId } = req.body;
+        
+        const notification = await Notification.create({
+            userId,
+            title,
+            message,
+            type: type || "info",
+            relatedId,
+            actionType,
+            subscriptionId
+        });
+
+        res.status(201).json(notification);
+    } catch (error) {
+        console.error("Error creating notification:", error);
+        res.status(500).json({ message: "Failed to create notification." });
+    }
+};

@@ -2,16 +2,16 @@ import express from "express";
 import { 
     getUserNotifications, 
     markAsRead, 
-    markAllAsRead 
+    markAllAsRead,
+    createNotification
 } from "../controllers/notificationController.js";
-import { requireUserAuth } from "../middlewares/authMiddleware.js";
+import { requireUserAuth, requireProviderAuth } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.use(requireUserAuth);
-
-router.get("/", getUserNotifications);
-router.put("/read-all", markAllAsRead);
-router.put("/read/:id", markAsRead);
+router.get("/", requireUserAuth, getUserNotifications);
+router.put("/read-all", requireUserAuth, markAllAsRead);
+router.put("/read/:id", requireUserAuth, markAsRead);
+router.post("/create", requireProviderAuth, createNotification);
 
 export default router;

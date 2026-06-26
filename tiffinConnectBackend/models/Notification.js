@@ -26,6 +26,15 @@ const notificationSchema = new mongoose.Schema({
     relatedId: {
         type: mongoose.Schema.Types.ObjectId, // E.g. Subscription ID
         default: null
+    },
+    actionType: {
+        type: String,
+        default: null
+    },
+    subscriptionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Subscription",
+        default: null
     }
 }, { timestamps: true });
 

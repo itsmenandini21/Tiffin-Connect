@@ -179,7 +179,7 @@ const updateProfile = async (req, res) => {
         const token = req.headers.authorization.split(" ")[1];
         const decoded_token = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");
         
-        const { name, phoneNumber, businessName, fssaiCertificate, bankAccount, ifscCode } = req.body;
+        const { name, phoneNumber, address, businessName, fssaiCertificate, bankAccount, ifscCode } = req.body;
 
         const user = await User.findById(decoded_token.id);
         if (!user) {
@@ -188,6 +188,15 @@ const updateProfile = async (req, res) => {
 
         if (name) user.name = name;
         if (phoneNumber) user.phoneNumber = phoneNumber;
+        
+        if (address) {
+            if (!user.address) user.address = {};
+            if (address.street !== undefined) user.address.street = address.street;
+            if (address.city !== undefined) user.address.city = address.city;
+            if (address.state !== undefined) user.address.state = address.state;
+            if (address.pincode !== undefined) user.address.pincode = address.pincode;
+        }
+
         await user.save();
 
         if (user.role === "provider") {

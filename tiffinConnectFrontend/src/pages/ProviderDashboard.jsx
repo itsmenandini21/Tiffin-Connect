@@ -338,7 +338,7 @@ export default function ProviderDashboard() {
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'add-menu', label: 'Add Menu', icon: PlusCircle },
+    { id: 'add-menu', label: 'Add Tiffin Service', icon: PlusCircle },
     { id: 'orders', label: 'Active Orders', icon: ShoppingBag },
     { id: 'reviews', label: 'Ratings & Reviews', icon: Star },
     { id: 'settings', label: 'Feedback Manager', icon: MessageSquare },
@@ -455,10 +455,10 @@ export default function ProviderDashboard() {
             <div className="flex items-center gap-4">
               <button 
                 onClick={handleLogout} 
-                className="bg-white border border-gray-200 hover:bg-red-50 hover:border-red-100 hover:text-red-600 text-gray-600 px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all flex items-center gap-2"
+                className="bg-white border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 hover:text-red-600 px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all flex items-center gap-2"
               >
                 <LogOut className="w-5 h-5" />
-                <span className="hidden sm:inline">Sign Out</span>
+                <span className="hidden sm:inline">Log out</span>
               </button>
             </div>
           </header>

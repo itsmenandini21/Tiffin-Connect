@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Calendar, MessageSquare, ChevronDown, ChevronUp, Loader2, Inbox, ShoppingBag, Crown, TrendingUp, Trash2 } from 'lucide-react';
+import { Star, Calendar, MessageSquare, ChevronDown, ChevronUp, Loader2, Inbox, ShoppingBag, Crown, TrendingUp, Trash2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ReviewsTab({ menus }) {
@@ -8,19 +8,20 @@ export default function ReviewsTab({ menus }) {
   const [loading, setLoading] = useState(false);
   const [campaignReviews, setCampaignReviews] = useState([]);
   const [expandedCampaigns, setExpandedCampaigns] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Performance data for all menus
   const [menuPerformance, setMenuPerformance] = useState([]);
   const [loadingPerformance, setLoadingPerformance] = useState(true);
 
-  // Auto-select first menu
-  useEffect(() => {
-    if (menus && menus.length > 0) {
-      if (!selectedMenuId || !menus.find(m => m._id === selectedMenuId)) {
-        setSelectedMenuId(menus[0]._id);
-      }
-    }
-  }, [menus, selectedMenuId]);
+  // Auto-select first menu removed as per user request to show list first
+  // useEffect(() => {
+  //   if (menus && menus.length > 0) {
+  //     if (!selectedMenuId || !menus.find(m => m._id === selectedMenuId)) {
+  //       setSelectedMenuId(menus[0]._id);
+  //     }
+  //   }
+  // }, [menus, selectedMenuId]);
 
   const activeMenu = menus.find(m => m._id === selectedMenuId);
 
@@ -130,6 +131,11 @@ export default function ReviewsTab({ menus }) {
   const bestService = sortedPerformance.length > 0 && sortedPerformance[0].averageRating > 0
     ? sortedPerformance[0]
     : null;
+  const topThreePerformance = sortedPerformance.slice(0, 3);
+  const filteredPerformance = sortedPerformance.filter(item => 
+    item.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    item.shift?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const activeMenuPerf = menuPerformance.find(p => p._id === selectedMenuId);
   const overallAvg = activeMenuPerf?.averageRating.toFixed(1) || "0.0";
@@ -273,66 +279,134 @@ export default function ReviewsTab({ menus }) {
                 </div>
               )}
 
-              {/* Leaderboard Progress Bars */}
-              <div className="space-y-3">
-                <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-wider px-1">
-                  Rankings Leaderboard
-                </label>
-                
-                {sortedPerformance.map((item, index) => {
-                  const isSelected = item._id === selectedMenuId;
-                  return (
-                    <button
-                      key={item._id}
-                      onClick={() => setSelectedMenuId(item._id)}
-                      className={`w-full text-left p-3.5 rounded-2xl border transition-all duration-300 flex flex-col gap-2 group ${
-                        isSelected
-                          ? 'bg-orange-50/40 border-orange-200 shadow-sm'
-                          : 'bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm'
-                      }`}
-                    >
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-extrabold text-gray-800 flex items-center gap-1.5 truncate max-w-[170px]">
-                          <span className="text-[10px] text-gray-400 font-black">#{index + 1}</span>
-                          {item.title}
-                        </span>
-                        <span className="font-black text-orange-600 flex items-center gap-0.5 shrink-0">
-                          {item.averageRating > 0 ? `${item.averageRating} ★` : 'No ratings'}
-                        </span>
-                      </div>
-                      
-                      <div className="w-full bg-slate-100 rounded-full h-2">
-                        <div 
-                          className="bg-gradient-to-r from-orange-500 to-amber-500 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${item.averageRating > 0 ? (item.averageRating / 5) * 100 : 0}%` }}
-                        />
-                      </div>
-                      
-                      <div className="flex justify-between items-center text-[9px] font-bold text-gray-400">
-                        <span className="uppercase">{item.shift} Shift</span>
-                        <span>{item.totalReviews} reviews</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+              {/* Top 3 Leaderboard */}
+              {sortedPerformance.length > 0 && (
+                <div className="space-y-3 mb-6">
+                  <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-wider px-1">
+                    Top 3 Leaderboard
+                  </label>
+                  
+                  {topThreePerformance.map((item, index) => {
+                    const isSelected = item._id === selectedMenuId;
+                    return (
+                      <button
+                        key={item._id}
+                        onClick={() => setSelectedMenuId(item._id)}
+                        className={`w-full text-left p-3.5 rounded-2xl border transition-all duration-300 flex flex-col gap-2 group ${
+                          isSelected
+                            ? 'bg-orange-50/40 border-orange-200 shadow-sm'
+                            : 'bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-extrabold text-gray-800 flex items-center gap-1.5 truncate max-w-[170px]">
+                            <span className="text-[10px] text-gray-400 font-black">#{index + 1}</span>
+                            {item.title}
+                          </span>
+                          <span className="font-black text-orange-600 flex items-center gap-0.5 shrink-0">
+                            {item.averageRating > 0 ? `${item.averageRating} ★` : 'No ratings'}
+                          </span>
+                        </div>
+                        
+                        <div className="w-full bg-slate-100 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-orange-500 to-amber-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${item.averageRating > 0 ? (item.averageRating / 5) * 100 : 0}%` }}
+                          />
+                        </div>
+                        
+                        <div className="flex justify-between items-center text-[9px] font-bold text-gray-400">
+                          <span className="uppercase">{item.shift} Shift</span>
+                          <span>{item.totalReviews} reviews</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
+              {/* End of Left Column stats */}
             </div>
           )}
         </div>
 
-        {/* Right Column: Detailed Reviews list for selected menu */}
+        {/* Right Column: Detailed Reviews list for selected menu OR all services list */}
         <div className="xl:col-span-2 space-y-6">
-          {activeMenu && (
+          {!activeMenu ? (
+            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="text-2xl font-black text-gray-900">Select a Service</h2>
+                  <p className="text-gray-500 text-sm mt-1">Choose a tiffin service to view its ratings and feedback responses.</p>
+                </div>
+              </div>
+
+              {/* Enhanced Search Bar */}
+              <div className="relative w-full max-w-md">
+                <input
+                  type="text"
+                  placeholder="Search your services..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-white border-2 border-orange-200 rounded-xl text-sm font-semibold text-gray-800 shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:font-medium placeholder:text-gray-400"
+                />
+                <Search className="w-5 h-5 text-orange-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              </div>
+
+              {/* Services List Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                {filteredPerformance.length === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-8 col-span-full">No services found matching "{searchQuery}"</p>
+                ) : (
+                  filteredPerformance.map((item, index) => {
+                    const realIndex = sortedPerformance.findIndex(p => p._id === item._id);
+                    return (
+                      <button
+                        key={item._id}
+                        onClick={() => setSelectedMenuId(item._id)}
+                        className="w-full text-left p-5 rounded-2xl border-2 border-gray-100 bg-white hover:border-orange-300 hover:shadow-md transition-all duration-300 flex justify-between items-center group"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <span className="font-extrabold text-gray-900 text-sm flex items-center gap-2">
+                            {item.title}
+                          </span>
+                          <span className="text-[10px] text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-md font-bold uppercase w-fit">
+                            {item.shift} Shift
+                          </span>
+                        </div>
+                        <div className="text-right flex flex-col items-end gap-1">
+                          <div className="bg-amber-50 text-amber-700 px-2 py-1 rounded-lg border border-amber-200 flex items-center gap-1 font-black text-xs">
+                            {item.averageRating > 0 ? `${item.averageRating}` : '--'} <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-extrabold uppercase">
+                            Rank #{realIndex + 1}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          ) : (
             <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 space-y-6">
               
               {/* Detailed Header Info */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-gray-100">
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider font-extrabold text-orange-600 bg-orange-100 px-2.5 py-0.5 rounded-full">
-                    {activeMenu.shift} Service 🍱
-                  </span>
-                  <h2 className="text-xl font-black text-gray-800 tracking-tight mt-2">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => setSelectedMenuId('')}
+                      className="text-gray-400 hover:text-orange-500 transition-colors p-1"
+                      title="Back to Services List"
+                    >
+                      <ChevronDown className="w-5 h-5 rotate-90" />
+                    </button>
+                    <span className="text-[10px] uppercase tracking-wider font-extrabold text-orange-600 bg-orange-100 px-2.5 py-0.5 rounded-full">
+                      {activeMenu.shift} Service 🍱
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-black text-gray-800 tracking-tight mt-3">
                     {activeMenu.title}
                   </h2>
                   <p className="text-xs font-bold text-gray-400 mt-0.5">

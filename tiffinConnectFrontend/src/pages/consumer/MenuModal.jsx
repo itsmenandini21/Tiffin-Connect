@@ -94,9 +94,9 @@ export default function MenuModal({ kitchen, initialMode, onClose, isSubscribed 
 
   // Dynamic Price Calculations (Producer-based)
   const basePricePerMeal = kitchen?.price || 120;
-  const planMultiplier = subType === "weekly" ? 7 : 30;
+  const planMultiplier = subType === "weekly" ? 7 : (subType === "monthly" ? 30 : 365);
   const basePrice = basePricePerMeal * planMultiplier;
-  const platformFee = 15;
+  const platformFee = subType === "yearly" ? 99 : 15;
   const gstTax = Math.round(basePrice * 0.05); // 5% GST
   const grandTotal = basePrice + platformFee + gstTax;
 
@@ -397,7 +397,7 @@ export default function MenuModal({ kitchen, initialMode, onClose, isSubscribed 
                       </div>
 
                       {/* Plan Selector Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                         {/* Weekly Card */}
                         <button
                           onClick={() => setSubType("weekly")}
@@ -469,6 +469,46 @@ export default function MenuModal({ kitchen, initialMode, onClose, isSubscribed 
                             <div className="flex justify-between items-baseline">
                               <span className="text-[11px] text-[#6B7280] font-bold">Total (30 meals)</span>
                               <span className="text-lg font-black text-[#FF7A00]">₹{basePricePerMeal * 30}</span>
+                            </div>
+                          </div>
+                        </button>
+
+                        {/* Yearly Card */}
+                        <button
+                          onClick={() => setSubType("yearly")}
+                          className={`p-6 rounded-3xl border-2 text-left transition-all duration-300 flex flex-col justify-between relative overflow-hidden h-60 ${
+                            subType === 'yearly'
+                              ? 'border-[#FF7A00] bg-[#FF7A00]/5 shadow-lg shadow-[#FF7A00]/5 ring-1 ring-[#FF7A00]/10'
+                              : 'border-[#FF7A00]/10 bg-white hover:border-[#FF7A00]/30 hover:shadow-md'
+                          }`}
+                        >
+                          <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                            <span className="text-[9px] uppercase tracking-wider font-extrabold text-[#9333EA] bg-[#9333EA]/10 px-2 py-0.5 rounded-full border border-[#9333EA]/20 shadow-sm">
+                              Premium 👑
+                            </span>
+                            {subType === 'yearly' && (
+                              <div className="bg-[#FF7A00] text-white p-1 rounded-full">
+                                <CheckCircle2 className="w-3.5 h-3.5 fill-current" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <div className="w-11 h-11 rounded-2xl bg-[#FF7A00]/10 flex items-center justify-center text-xl mb-4 shadow-inner select-none">
+                              🍱
+                            </div>
+                            <h4 className="text-base font-black text-[#2D2D2D]">Yearly Plan</h4>
+                            <p className="text-xs text-[#6B7280] font-bold mt-1">365 Days of deliveries</p>
+                          </div>
+
+                          <div className="mt-4 border-t border-[#FF7A00]/10 pt-4 w-full">
+                            <div className="flex justify-between items-baseline mb-1">
+                              <span className="text-[11px] text-[#6B7280] font-bold">Price per meal</span>
+                              <span className="text-xs font-black text-[#2D2D2D]">₹{basePricePerMeal}</span>
+                            </div>
+                            <div className="flex justify-between items-baseline">
+                              <span className="text-[11px] text-[#6B7280] font-bold">Total (365 meals)</span>
+                              <span className="text-lg font-black text-[#FF7A00]">₹{basePricePerMeal * 365}</span>
                             </div>
                           </div>
                         </button>
@@ -563,10 +603,21 @@ export default function MenuModal({ kitchen, initialMode, onClose, isSubscribed 
                     {/* Platform Terms */}
                     <div className="space-y-2">
                       <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#6B7280]">1. Platform Subscription Terms</h4>
-                      <ul className="text-[11px] font-semibold text-[#6B7280] space-y-1.5 pl-4 list-disc">
-                        <li>You can pause or restart your active plan deliveries at any time from your Customer Dashboard.</li>
-                        <li>Subscription pausing must be triggered before the meal prep cutoff window (typically 12 hrs).</li>
-                        <li>No direct partial refunds are provided for active cycles; paused days are credited.</li>
+                      <ul className="text-[11px] font-semibold text-[#6B7280] space-y-2 pl-4 list-disc">
+                        <li>
+                          <strong className="text-[#2D2D2D]">Pause Rules:</strong> You can pause plan deliveries from your dashboard. Pausing must be triggered before the meal prep cutoff window (typically 12 hrs before delivery).
+                        </li>
+                        <li>
+                          <strong className="text-[#2D2D2D]">Plan Validity:</strong> Paused days are credited by extending your plan validity automatically:
+                          <ul className="pl-4 mt-1 space-y-0.5 list-circle text-[10px]">
+                            <li><span className="font-bold text-[#FF7A00]">Weekly (7 meals):</span> Extended by 3 days (Total validity: 10 days)</li>
+                            <li><span className="font-bold text-[#FF7A00]">Monthly (30 meals):</span> Extended by 10 days (Total validity: 40 days)</li>
+                            <li><span className="font-bold text-[#FF7A00]">Yearly (365 meals):</span> Extended by 60 days (Total validity: 425 days)</li>
+                          </ul>
+                        </li>
+                        <li>
+                          <strong className="text-red-500">Refund Policy:</strong> No partial refunds are provided. If unused meals remain after the maximum extended validity period expires, they will be permanently forfeited without a refund.
+                        </li>
                       </ul>
                     </div>
 

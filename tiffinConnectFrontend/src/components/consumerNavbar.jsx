@@ -6,10 +6,23 @@ import toast from 'react-hot-toast';
 
 export default function ConsumerNavbar() {
   const navigate = useNavigate();
+  const navRef = React.useRef(null);
 
   // Dropdown visibility state:
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+        setIsNotifOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Notifications State
   const [notifications, setNotifications] = useState([]);
@@ -79,6 +92,34 @@ export default function ConsumerNavbar() {
     }
   };
 
+  const handleConfirmDelivery = async (notifId, subscriptionId) => {
+    const token = localStorage.getItem('token');
+    try {
+        // 1. Confirm delivery
+        const res = await fetch(`${API_URL}/subscription/confirmDelivery/${subscriptionId}`, {
+            method: 'PUT',
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+            toast.success("Delivery Confirmed! Enjoy your meal 💚", {
+                icon: '🍲',
+                style: {
+                    borderRadius: '10px',
+                    background: '#333',
+                    color: '#fff',
+                },
+            });
+            // 2. Mark notification as read
+            await markAsRead(notifId);
+        } else {
+            toast.error("Failed to confirm delivery");
+        }
+    } catch (err) {
+        console.error("Confirm delivery error:", err);
+        toast.error("An error occurred");
+    }
+  };
+
   // Logout function:
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -92,7 +133,7 @@ export default function ConsumerNavbar() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 100 }}
-      className="bg-white/70 backdrop-blur-lg sticky top-0 z-50 border-b border-white/50 shadow-sm"
+      className="bg-white/80 backdrop-blur-xl sticky top-0 z-[100] border-b border-gray-200/50 shadow-sm"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -111,28 +152,36 @@ export default function ConsumerNavbar() {
           </Link>
 
           {/* Right Side: Profile & Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4" ref={navRef}>
             
             {/* View Subscriptions Shortcut Button */}
             <Link 
               to="/my-subscriptions" 
-              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-orange-400 font-semibold border border-orange-500/25 hover:border-orange-500 hover:bg-orange-500/10 transition-all duration-300"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-gray-700 font-bold border border-gray-200 hover:border-orange-500 hover:bg-orange-500/10 hover:text-orange-500 transition-all duration-300 shadow-sm bg-white"
             >
               <CalendarDays className="w-4 h-4" />
-              <span>My Subscriptions</span>
+              <span className="text-sm">My Subscriptions</span>
             </Link>
 
             {/* Notification Bell Container */}
             <div className="relative">
               <button 
                 onClick={() => { setIsNotifOpen(!isNotifOpen); setIsDropdownOpen(false); }}
-                className="relative p-2 rounded-xl text-gray-500 hover:text-orange-500 hover:bg-orange-500/10 transition-colors focus:outline-none"
+                className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-gray-700 font-bold border border-gray-200 hover:border-orange-500 hover:bg-orange-500/10 hover:text-orange-500 transition-all duration-300 shadow-sm bg-white"
               >
-                <Bell className="w-5 h-5" />
+                <div className="relative flex items-center">
+                  <Bell className="w-4 h-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500 border border-white"></span>
+                    </span>
+                  )}
+                </div>
+                <span className="hidden sm:inline text-sm">Notifications</span>
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500 border-2 border-white"></span>
+                  <span className="hidden sm:inline-flex items-center justify-center bg-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md">
+                    {unreadCount}
                   </span>
                 )}
               </button>
@@ -140,10 +189,8 @@ export default function ConsumerNavbar() {
               {/* Notifications Dropdown */}
               <AnimatePresence>
                 {isNotifOpen && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setIsNotifOpen(false)} />
-                    <motion.div
-                      initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                  <motion.div
+                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
@@ -178,13 +225,24 @@ export default function ConsumerNavbar() {
                               <div>
                                 <h4 className={`text-xs font-bold ${notif.isRead ? 'text-gray-600' : 'text-gray-900'}`}>{notif.title}</h4>
                                 <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">{notif.message}</p>
+                                
+                                {notif.actionType === 'CONFIRM_DELIVERY' && !notif.isRead && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleConfirmDelivery(notif._id, notif.subscriptionId || notif.relatedId);
+                                    }}
+                                    className="mt-2 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-sm"
+                                  >
+                                    <Check className="w-3 h-3" /> Yes, I Received It
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ))
                         )}
                       </div>
-                    </motion.div>
-                  </>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
@@ -222,15 +280,8 @@ export default function ConsumerNavbar() {
               {/* Glassmorphic Dropdown List */}
               <AnimatePresence>
                 {isDropdownOpen && (
-                  <>
-                    {/* Backdrop to close when clicking outside */}
-                    <div 
-                      className="fixed inset-0 z-10" 
-                      onClick={() => setIsDropdownOpen(false)}
-                    />
-                    
-                    <motion.div
-                      initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                  <motion.div
+                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
@@ -244,16 +295,6 @@ export default function ConsumerNavbar() {
 
                       {/* Dropdown Options */}
                       <div className="p-1.5 space-y-1">
-                        
-                        <Link 
-                          to="/my-subscriptions"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold text-gray-600 hover:text-orange-600 hover:bg-orange-500/10 transition-all duration-200"
-                        >
-                          <CalendarDays className="w-4 h-4 text-gray-400 group-hover:text-orange-500" />
-                          <span>My Subscriptions</span>
-                        </Link>
-
                         <Link 
                           to="/settings"
                           onClick={() => setIsDropdownOpen(false)}
@@ -283,7 +324,6 @@ export default function ConsumerNavbar() {
                       </div>
 
                     </motion.div>
-                  </>
                 )}
               </AnimatePresence>
 

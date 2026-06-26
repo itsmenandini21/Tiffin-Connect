@@ -2,6 +2,7 @@ import TiffinService from "../models/TiffinService.js";
 import ProviderProfile from "../models/ProviderProfile.js";
 import Subscription from "../models/Subscription.js";
 import Review from "../models/Review.js";
+import User from "../models/user.js";
 const addMenu = async (req, res) => {
     try {
         const newMenu = await TiffinService.create({
@@ -64,6 +65,7 @@ const getProviderServices = async (req,res) =>{
                         deliveryStatus : sub.deliveryStatus || "pending",
                         deliveryStatusUpdatedAt : sub.deliveryStatusUpdatedAt || null,
                         customer:{
+                            _id: sub.userId ? sub.userId._id : null,
                             name : sub.userId ? sub.userId.name : "Customer",                      
                             phoneNumber : sub.userId ? sub.userId.phoneNumber : "N/A",
                             address: sub.userId?.address || {}
@@ -156,9 +158,22 @@ const deleteMenu = async (req, res) => {
 
 const getAllServices = async (req, res) => {
     try {
+        const userCity = req.user?.address?.city;
+
         // Fetch verified provider profiles
         const verifiedProfiles = await ProviderProfile.find({ isVerified: true }).select("userId");
-        const verifiedProviderIds = verifiedProfiles.map(p => p.userId.toString());
+        let verifiedProviderIds = verifiedProfiles.map(p => p.userId.toString());
+
+        // Filter providers by the user's city
+        if (userCity) {
+            const cityRegex = new RegExp(`^${userCity}$`, 'i');
+            const cityProviders = await User.find({
+                _id: { $in: verifiedProviderIds },
+                "address.city": cityRegex
+            }).select("_id");
+            
+            verifiedProviderIds = cityProviders.map(p => p._id.toString());
+        }
 
         const services = await TiffinService.find({ 
             isAvailable: { $ne: false }, 

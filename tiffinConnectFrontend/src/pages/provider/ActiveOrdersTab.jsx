@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { MapPin, Phone, MessageSquare, Check, RotateCcw, ShoppingBag, Coffee, ChevronRight, Inbox, Loader, ArrowLeft } from 'lucide-react';
+import { MapPin, Phone, MessageSquare, Check, RotateCcw, ShoppingBag, Coffee, ChevronRight, Inbox, Loader, ArrowLeft, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ActiveOrdersTab({ menus, onRefresh }) {
   const [selectedMenuId, setSelectedMenuId] = useState(null);
   const [updatingBatch, setUpdatingBatch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   if (menus.length === 0) {
     return (
@@ -22,41 +23,67 @@ export default function ActiveOrdersTab({ menus, onRefresh }) {
 
   // If no menu is selected, show the list of services (The drill-down root)
   if (!selectedMenuId || !activeMenu) {
+    const filteredMenus = menus.filter(menu => 
+      menu.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      menu.shift?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
       <div className="space-y-6">
         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
-          <h2 className="text-2xl font-black text-gray-900 mb-2">Select a Service</h2>
-          <p className="text-gray-500 mb-6 text-sm">Choose a kitchen service below to view and manage its active orders.</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {menus.map(menu => (
-              <div 
-                key={menu._id}
-                onClick={() => setSelectedMenuId(menu._id)}
-                className="p-6 bg-white border border-gray-200 rounded-3xl cursor-pointer hover:border-orange-500 hover:shadow-xl hover:-translate-y-1 transition-all group flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-[10px] uppercase tracking-wider font-extrabold text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-100">
-                      {menu.shift}
-                    </span>
-                    <div className="bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-xl text-center shadow-sm">
-                      <span className="block text-xl font-black leading-none">{menu.deliverTodayCount || 0}</span>
-                      <span className="block text-[8px] uppercase font-bold text-gray-400 mt-1">Orders</span>
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-black text-gray-900 group-hover:text-orange-500 transition-colors leading-tight">
-                    {menu.title}
-                  </h3>
-                </div>
-                
-                <div className="flex items-center gap-2 text-sm text-gray-500 mt-6 pt-4 border-t border-gray-100">
-                  <Coffee className="w-4 h-4 text-orange-400" />
-                  <span className="font-bold text-xs">{(menu.startTime && menu.endTime) ? `${menu.startTime} - ${menu.endTime}` : "Timings not set"}</span>
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div>
+              <h2 className="text-2xl font-black text-gray-900 mb-2">Select a Service</h2>
+              <p className="text-gray-500 text-sm">Choose a kitchen service below to view and manage its active orders.</p>
+            </div>
+            {/* Search Bar */}
+            <div className="relative w-full sm:w-64 shrink-0">
+              <input
+                type="text"
+                placeholder="Search services..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-orange-200 rounded-xl text-sm font-semibold text-gray-800 shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:font-medium placeholder:text-gray-400"
+              />
+              <Search className="w-4 h-4 text-orange-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            </div>
           </div>
+          
+          {filteredMenus.length === 0 ? (
+            <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 text-center">
+              <p className="text-gray-500 font-bold">No services found matching "{searchQuery}"</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredMenus.map(menu => (
+                <div 
+                  key={menu._id}
+                  onClick={() => setSelectedMenuId(menu._id)}
+                  className="p-6 bg-white border border-gray-200 rounded-3xl cursor-pointer hover:border-orange-500 hover:shadow-xl hover:-translate-y-1 transition-all group flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex justify-between items-start mb-4">
+                      <span className="text-[10px] uppercase tracking-wider font-extrabold text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-100">
+                        {menu.shift}
+                      </span>
+                      <div className="bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-xl text-center shadow-sm">
+                        <span className="block text-xl font-black leading-none">{menu.deliverTodayCount || 0}</span>
+                        <span className="block text-[8px] uppercase font-bold text-gray-400 mt-1">Orders</span>
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-black text-gray-900 group-hover:text-orange-500 transition-colors leading-tight">
+                      {menu.title}
+                    </h3>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-gray-500 mt-6 pt-4 border-t border-gray-100">
+                    <Coffee className="w-4 h-4 text-orange-400" />
+                    <span className="font-bold text-xs">{(menu.startTime && menu.endTime) ? `${menu.startTime} - ${menu.endTime}` : "Timings not set"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -64,7 +91,7 @@ export default function ActiveOrdersTab({ menus, onRefresh }) {
 
   // --- Functions for the selected menu view ---
 
-  const toggleDeliveryStatus = async (subId, currentStatus) => {
+  const toggleDeliveryStatus = async (subId, currentStatus, customerId, menuTitle) => {
     let nextStatus = "pending";
     if (currentStatus === "pending") {
       nextStatus = "dispatched";
@@ -85,6 +112,29 @@ export default function ActiveOrdersTab({ menus, onRefresh }) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to update status");
+      
+      // If status changed to dispatched, trigger notification
+      if (nextStatus === "dispatched" && customerId) {
+        try {
+          await fetch(`${API_URL}/notifications/create`, {
+            method: 'POST',
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              userId: customerId,
+              title: 'Order Dispatched 🛵',
+              message: `Your order from ${menuTitle} is on the way! Did you receive it?`,
+              actionType: 'CONFIRM_DELIVERY',
+              subscriptionId: subId
+            })
+          });
+        } catch (notifErr) {
+          console.error("Failed to send dispatch notification:", notifErr);
+        }
+      }
+      
       toast.success(`Status updated to ${nextStatus}!`);
       if (onRefresh) onRefresh();
     } catch (err) {
@@ -112,6 +162,34 @@ export default function ActiveOrdersTab({ menus, onRefresh }) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to update batch status");
+      
+      // If status changed to dispatched, trigger notifications for all updated subscribers
+      if (status === "dispatched" && activeMenu.subscribers) {
+        try {
+          const eligibleSubs = activeMenu.subscribers.filter(s => s.status === 'active' && !s.isSkippedToday && s.deliveryStatus !== 'delivered');
+          for (const sub of eligibleSubs) {
+            if (sub.customer?._id) {
+              await fetch(`${API_URL}/notifications/create`, {
+                method: 'POST',
+                headers: {
+                  "Authorization": `Bearer ${token}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  userId: sub.customer._id,
+                  title: 'Order Dispatched 🛵',
+                  message: `Your order from ${activeMenu.title} is on the way! Did you receive it?`,
+                  actionType: 'CONFIRM_DELIVERY',
+                  subscriptionId: sub.subscriptionId
+                })
+              });
+            }
+          }
+        } catch (notifErr) {
+          console.error("Failed to send batch dispatch notifications:", notifErr);
+        }
+      }
+      
       toast.success(`Batch successfully updated to ${status}!`);
       if (onRefresh) onRefresh();
     } catch (err) {
@@ -358,7 +436,7 @@ export default function ActiveOrdersTab({ menus, onRefresh }) {
                             {/* Checklist checkbox */}
                             {!isSkipped && !isPaused && (
                               <button
-                                onClick={() => toggleDeliveryStatus(sub.subscriptionId, sub.deliveryStatus)}
+                                onClick={() => toggleDeliveryStatus(sub.subscriptionId, sub.deliveryStatus, sub.customer?._id, activeMenu.title)}
                                 className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all ${
                                   isPacked 
                                     ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200' 
