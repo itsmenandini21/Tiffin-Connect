@@ -25,6 +25,7 @@
 4. [Getting Started (Local Setup)](#-getting-started)
 5. [Environment Variables](#-environment-variables)
 6. [Live Demo & Deployment](#-live-demo--deployment)
+7. [Future Scope](#-future-scope)
 
 ---
 
@@ -114,6 +115,16 @@ JWT_SECRET=your_jwt_secret_key
 VITE_API_BASE_URL=http://localhost:3000/api
 # (Or your Render URL if testing with live backend)
 ```
+
+---
+
+## 🚀 Future Scope
+
+While the core functionality of Tiffin Connect is fully operational, there are several exciting features planned for future releases (currently not implemented):
+
+- **Email Verification:** Implementing OTP-based or link-based email verification during user registration for enhanced security.
+- **Payment Gateway Integration:** Integrating Razorpay or Stripe to allow users to pay for their tiffin subscriptions directly through the platform.
+- **Real-Time Chat:** A direct messaging system between Consumers and Chefs to discuss specific dietary requirements or delivery instructions.
 
 ---
 
