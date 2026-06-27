@@ -124,7 +124,6 @@ While the core functionality of Tiffin Connect is fully operational, there are s
 
 - **Email Verification:** Implementing OTP-based or link-based email verification during user registration for enhanced security.
 - **Payment Gateway Integration:** Integrating Razorpay or Stripe to allow users to pay for their tiffin subscriptions directly through the platform.
-- **Real-Time Chat:** A direct messaging system between Consumers and Chefs to discuss specific dietary requirements or delivery instructions.
 
 ---
 
