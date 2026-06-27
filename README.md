@@ -14,12 +14,7 @@
   </p>
 </div>
 
----
 
-## 🌐 Live Links
-
-- **Backend API:** [🚀 Deployed on Render](https://tiffin-connect-backend.onrender.com)
-- **Frontend App:** 🚧 *Deploying Soon on Vercel...*
 
 ---
 
@@ -119,6 +114,28 @@ JWT_SECRET=your_jwt_secret_key
 VITE_API_BASE_URL=http://localhost:3000/api
 # (Or your Render URL if testing with live backend)
 ```
+
+---
+
+## 🌐 Live Demo & Deployment
+
+- **Frontend App (Vercel):** [https://tiffin-connect-beta.vercel.app/](https://tiffin-connect-beta.vercel.app/)
+- **Backend API (Render):** [https://tiffin-connect.onrender.com](https://tiffin-connect.onrender.com)
+
+### 🔐 Test Credentials
+Feel free to test the application using the following dummy accounts:
+
+**Admin Account:**
+- **Email:** `nandinimehrotra338@gmail.com`
+- **Password:** `hey`
+
+**Home Chef (Provider) Account:**
+- **Email:** `nidhi123@gmail.com`
+- **Password:** `hey`
+
+**Consumer Account:**
+- **Email:** `nandinimehrotra99@gmail.com`
+- **Password:** `ILoveProgramming`
 
 ---
 
