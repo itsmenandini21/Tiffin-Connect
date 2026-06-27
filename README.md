@@ -24,7 +24,7 @@
 3. [Tech Stack](#-tech-stack)
 4. [Getting Started (Local Setup)](#-getting-started)
 5. [Environment Variables](#-environment-variables)
-6. [Future Scope](#-future-scope)
+6. [Live Demo & Deployment](#-live-demo--deployment)
 
 ---
 
