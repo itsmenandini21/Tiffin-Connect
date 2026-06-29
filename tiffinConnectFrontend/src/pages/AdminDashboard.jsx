@@ -653,7 +653,7 @@ export default function AdminDashboard() {
                             <td className="py-4 px-4 text-right">
                               <button
                                 onClick={() => setSelectedProviderProfile(profile)}
-                                className="bg-indigo-600 hover:bg-indigo-50 text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-indigo-600/10 transition-all duration-300"
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-indigo-600/20 transition-all duration-300"
                               >
                                 View Credentials
                               </button>
@@ -1175,8 +1175,8 @@ export default function AdminDashboard() {
 
                   <div className="flex gap-4">
                     <button
-                      onClick={() => setSelectedProviderProfile(null)}
-                      className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-3.5 rounded-xl text-xs font-bold transition-all"
+                      onClick={() => { setSelectedProviderProfile(null) }}
+                      className="flex-1 bg-slate-800 hover:bg-purple-600 hover:text-white text-slate-300 py-3.5 rounded-xl text-xs font-bold transition-all"
                     >
                       Hold Review
                     </button>
