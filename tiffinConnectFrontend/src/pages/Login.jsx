@@ -215,7 +215,7 @@ export default function Login() {
       return;
     }
 
-    const toastId = toast.loading("Uploading certificate to Cloudinary...");
+    const toastId = toast.loading("Securely uploading your certificate...");
     
     try {
       const CLOUD_NAME = "ds94mrgkb";
@@ -232,7 +232,7 @@ export default function Login() {
 
       const fileData = await res.json();
       if (!res.ok) {
-        throw new Error(fileData.error?.message || "Failed to upload image to Cloudinary");
+        throw new Error(fileData.error?.message || "Failed to upload the document. Please try again.");
       }
 
       toast.success("Document uploaded successfully!", { id: toastId });

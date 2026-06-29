@@ -175,7 +175,7 @@ export default function ProviderDashboard() {
 
     try {
       if ((coverFile && coverFile.size > 0) || (menuFiles && menuFiles.length > 0 && menuFiles[0].size > 0)) {
-        const toastId = toast.loading("Uploading images to Cloudinary...");
+        const toastId = toast.loading("Processing and uploading media...");
         if (coverFile && coverFile.size > 0) {
            coverImage = await uploadToCloudinary(coverFile);
         }
@@ -251,7 +251,7 @@ export default function ProviderDashboard() {
 
     try {
       if ((coverFile && coverFile.size > 0) || (menuFiles && menuFiles.length > 0 && menuFiles[0].size > 0)) {
-        const toastId = toast.loading("Uploading new images to Cloudinary...");
+        const toastId = toast.loading("Processing and uploading new media...");
         if (coverFile && coverFile.size > 0) {
            coverImage = await uploadToCloudinary(coverFile);
         }
